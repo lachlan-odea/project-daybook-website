@@ -1,4 +1,5 @@
 import { motion } from 'framer-motion'
+import { Link } from 'react-router-dom'
 import { Sparkles, Mic, ArrowRight, ShieldCheck, Star } from 'lucide-react'
 import { DashboardMockup } from '../components/Mockups'
 
@@ -56,9 +57,9 @@ export default function Hero() {
             transition={{ duration: 0.6, delay: 0.19 }}
             className="mt-8 flex flex-col gap-3 sm:flex-row"
           >
-            <a href="#cta" className="btn-primary text-base">
+            <Link to="/signup" className="btn-primary text-base">
               Start free trial <ArrowRight size={18} />
-            </a>
+            </Link>
             <a href="#how" className="btn-ghost text-base">
               <Mic size={18} /> See how it works
             </a>

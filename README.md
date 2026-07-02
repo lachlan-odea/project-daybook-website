@@ -11,6 +11,21 @@ productivity platform that turns everyday teaching into professional evidence �
 - **Tailwind CSS** (custom brand design system)
 - **Framer Motion** (scroll & micro animations)
 - **Lucide** (icons)
+- **React Router** (marketing + app routing)
+- **Firebase** — Authentication (email/password, Google, Microsoft) + Cloud Firestore
+
+## Authentication
+
+The site includes a real login flow backed by Firebase:
+
+- `/login` and `/signup` — branded auth pages (email/password + Google + Microsoft)
+- `/app` — a protected dashboard shell, only reachable when signed in
+- User profiles are written to Firestore (`users/{uid}`) on first sign-in
+
+**Before auth works you must configure Firebase.** See **[FIREBASE_SETUP.md](FIREBASE_SETUP.md)**
+for step-by-step instructions (create the project, enable providers, add your `.env` values, and
+set the GitHub Actions secrets for production). Until then, the pages render but sign-in shows a
+"Firebase isn't configured yet" message.
 
 ## Getting started
 
@@ -24,13 +39,18 @@ npm run preview  # preview the production build locally
 ## Project structure
 
 ```
-public/                 Static assets (favicon)
+public/                 Static assets (favicon, 404.html SPA fallback)
 src/
-  components/           Reusable UI (Logo, Navbar, Footer, Reveal, Mockups)
+  components/           Reusable UI (Logo, Navbar, Footer, Reveal, Mockups,
+                        AuthLayout, SocialAuthButtons, ProtectedRoute)
+  context/             AuthContext (Firebase auth state + actions)
+  lib/                 firebase.ts (app init, auth, firestore, providers)
+  pages/               LandingPage, Login, Signup, Dashboard (/app)
   sections/            Landing-page sections (Hero, HowItWorks, Pricing, FAQ, …)
-  App.tsx              Page composition
+  App.tsx              Router + AuthProvider
   index.css            Tailwind layers + component utilities
 tailwind.config.js     Brand colors, fonts, animations
+.env.example           Firebase config template (copy to .env)
 ```
 
 ## Brand

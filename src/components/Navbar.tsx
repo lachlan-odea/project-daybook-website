@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
-import { Menu, X } from 'lucide-react'
+import { Link } from 'react-router-dom'
+import { Menu, X, ArrowRight } from 'lucide-react'
 import Logo from './Logo'
+import { useAuth } from '../context/AuthContext'
 
 const links = [
   { label: 'Features', href: '#features' },
@@ -14,6 +16,7 @@ const links = [
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false)
   const [open, setOpen] = useState(false)
+  const { user } = useAuth()
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 12)
@@ -49,12 +52,23 @@ export default function Navbar() {
           </div>
 
           <div className="hidden items-center gap-2 lg:flex">
-            <a href="#" className="rounded-full px-4 py-2 text-sm font-semibold text-navy-700 hover:text-navy-900">
-              Sign in
-            </a>
-            <a href="#cta" className="btn-primary text-sm">
-              Start free trial
-            </a>
+            {user ? (
+              <Link to="/app" className="btn-primary text-sm">
+                Go to app <ArrowRight size={16} />
+              </Link>
+            ) : (
+              <>
+                <Link
+                  to="/login"
+                  className="rounded-full px-4 py-2 text-sm font-semibold text-navy-700 hover:text-navy-900"
+                >
+                  Sign in
+                </Link>
+                <Link to="/signup" className="btn-primary text-sm">
+                  Start free trial
+                </Link>
+              </>
+            )}
           </div>
 
           <button
@@ -87,14 +101,22 @@ export default function Navbar() {
                     {l.label}
                   </a>
                 ))}
-                <div className="mt-2 grid grid-cols-2 gap-2 p-2">
-                  <a href="#" className="btn-ghost text-sm" onClick={() => setOpen(false)}>
-                    Sign in
-                  </a>
-                  <a href="#cta" className="btn-primary text-sm" onClick={() => setOpen(false)}>
-                    Start free
-                  </a>
-                </div>
+                {user ? (
+                  <div className="p-2">
+                    <Link to="/app" className="btn-primary w-full text-sm" onClick={() => setOpen(false)}>
+                      Go to app <ArrowRight size={16} />
+                    </Link>
+                  </div>
+                ) : (
+                  <div className="mt-2 grid grid-cols-2 gap-2 p-2">
+                    <Link to="/login" className="btn-ghost text-sm" onClick={() => setOpen(false)}>
+                      Sign in
+                    </Link>
+                    <Link to="/signup" className="btn-primary text-sm" onClick={() => setOpen(false)}>
+                      Start free
+                    </Link>
+                  </div>
+                )}
               </div>
             </div>
           </motion.div>

@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom'
 import { ArrowRight, Mic, Check } from 'lucide-react'
 import Reveal from '../components/Reveal'
 
@@ -28,9 +29,9 @@ export default function CTA() {
             </p>
 
             <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
-              <a href="#" className="btn-primary text-base">
+              <Link to="/signup" className="btn-primary text-base">
                 Start your free trial <ArrowRight size={18} />
-              </a>
+              </Link>
               <a href="#" className="btn text-base border border-white/20 bg-white/5 px-6 py-3 text-white hover:bg-white/10">
                 Book a demo
               </a>

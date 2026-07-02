@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Link } from 'react-router-dom'
 import { Check, Sparkles } from 'lucide-react'
 import Reveal from '../components/Reveal'
 
@@ -128,12 +129,15 @@ export default function Pricing() {
                   )}
                 </div>
 
-                <a
-                  href="#cta"
-                  className={`mt-6 w-full ${plan.highlight ? 'btn-primary' : 'btn-navy'}`}
-                >
-                  {plan.cta}
-                </a>
+                {plan.name === 'Faculty & School' ? (
+                  <a href="#cta" className={`mt-6 w-full ${plan.highlight ? 'btn-primary' : 'btn-navy'}`}>
+                    {plan.cta}
+                  </a>
+                ) : (
+                  <Link to="/signup" className={`mt-6 w-full ${plan.highlight ? 'btn-primary' : 'btn-navy'}`}>
+                    {plan.cta}
+                  </Link>
+                )}
 
                 <ul className="mt-7 space-y-3">
                   {plan.features.map((f) => (
