@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Pencil, Plus, Trash2, X, Check, Loader2, RotateCcw, CalendarClock, Clock } from 'lucide-react'
+import { Pencil, Plus, Trash2, X, Check, Loader2, RotateCcw, CalendarClock, Clock, Upload } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
+import TimetableImport from '../components/TimetableImport'
 import {
   CLASS_COLORS,
   DAYS,
@@ -42,6 +43,7 @@ export default function Timetable() {
   const [msg, setMsg] = useState('')
   const [editCell, setEditCell] = useState<{ week: WeekId; periodId: string; day: number } | null>(null)
   const [viewWeek, setViewWeek] = useState<WeekId>('A')
+  const [showImport, setShowImport] = useState(false)
 
   const dirtyRef = useRef(false)
   const baselineRef = useRef<Timetable | null>(null)
@@ -161,6 +163,15 @@ export default function Timetable() {
     setMsg('')
   }
 
+  const applyImport = (imported: Timetable) => {
+    setTt(imported)
+    setDirty(true)
+    setEditing(true)
+    setViewWeek('A')
+    setShowImport(false)
+    setMsg('Imported — review the timetable below and adjust anything, then Save.')
+  }
+
   if (loading || !tt) {
     return (
       <main className="mx-auto max-w-6xl px-5 py-8 sm:px-8">
@@ -186,6 +197,9 @@ export default function Timetable() {
         <div className="flex items-center gap-2">
           {editing ? (
             <>
+              <button onClick={() => setShowImport(true)} className="btn-ghost text-sm">
+                <Upload size={16} /> Import
+              </button>
               <button onClick={cancel} disabled={saving} className="btn-ghost text-sm">
                 <RotateCcw size={16} /> Cancel
               </button>
@@ -406,6 +420,8 @@ export default function Timetable() {
           ← Back to dashboard
         </Link>
       </p>
+
+      {showImport && <TimetableImport onClose={() => setShowImport(false)} onImport={applyImport} />}
 
       {editCell &&
         (() => {

@@ -183,12 +183,6 @@ export default function Dashboard() {
           </div>
         </div>
       </div>
-
-      <p className="mt-8 text-center text-xs text-navy-400">
-        <Link to="/" className="font-semibold text-teal-600 hover:text-teal-700">
-          ← Back to website
-        </Link>
-      </p>
     </main>
   )
 }
