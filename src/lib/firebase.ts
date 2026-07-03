@@ -1,6 +1,6 @@
 import { initializeApp, type FirebaseApp } from 'firebase/app'
 import { getAuth, GoogleAuthProvider, OAuthProvider, type Auth } from 'firebase/auth'
-import { getFirestore, type Firestore } from 'firebase/firestore'
+import { initializeFirestore, type Firestore } from 'firebase/firestore'
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
@@ -24,7 +24,9 @@ let db: Firestore | undefined
 if (firebaseConfigured) {
   app = initializeApp(firebaseConfig)
   auth = getAuth(app)
-  db = getFirestore(app)
+  // ignoreUndefinedProperties so writes with optional fields (e.g. a class with
+  // no room) don't throw — Firestore otherwise rejects `undefined` values.
+  db = initializeFirestore(app, { ignoreUndefinedProperties: true })
 } else {
   console.warn(
     '[Project Daybook] Firebase is not configured. Add your VITE_FIREBASE_* values ' +
