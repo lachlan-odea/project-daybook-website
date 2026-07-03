@@ -17,14 +17,50 @@ export interface ClassCell {
   color?: ClassColor
 }
 
+export type WeekId = 'A' | 'B'
+export const WEEKS: WeekId[] = ['A', 'B']
+
 export interface Timetable {
   periods: Period[]
-  /** Keyed by `${periodId}__${dayIndex}` where dayIndex is 0 (Mon) … 4 (Fri). */
+  /** Keyed by `${week}__${periodId}__${dayIndex}`; week is 'A'|'B', dayIndex 0 (Mon) … 4 (Fri). */
   cells: Record<string, ClassCell>
+  /** Whether the school runs a fortnightly (A/B week) timetable. */
+  fortnightly?: boolean
+  /** Monday (yyyy-mm-dd) of a reference calendar week, used to work out the current week. */
+  anchorMondayISO?: string
+  /** Which week (A/B) that reference calendar week is. */
+  anchorWeek?: WeekId
 }
 
 export const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday']
 export const DAYS_SHORT = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri']
+
+export const otherWeek = (w: WeekId): WeekId => (w === 'A' ? 'B' : 'A')
+
+/** Monday (local) of the week containing `d`. */
+export function mondayOf(d: Date): Date {
+  const date = new Date(d.getFullYear(), d.getMonth(), d.getDate())
+  const offset = (date.getDay() + 6) % 7 // 0 = Mon … 6 = Sun
+  date.setDate(date.getDate() - offset)
+  return date
+}
+
+export function mondayISO(d: Date): string {
+  const m = mondayOf(d)
+  const mm = String(m.getMonth() + 1).padStart(2, '0')
+  const dd = String(m.getDate()).padStart(2, '0')
+  return `${m.getFullYear()}-${mm}-${dd}`
+}
+
+/** Works out whether a given date falls in Week A or Week B, from the anchor. */
+export function currentWeek(tt: Timetable | null, now: Date = new Date()): WeekId {
+  if (!tt?.fortnightly || !tt.anchorMondayISO || !tt.anchorWeek) return 'A'
+  const [y, m, d] = tt.anchorMondayISO.split('-').map(Number)
+  const anchor = new Date(y, (m || 1) - 1, d || 1)
+  const weeks = Math.round((mondayOf(now).getTime() - anchor.getTime()) / (7 * 86_400_000))
+  const parity = ((weeks % 2) + 2) % 2
+  return parity === 0 ? tt.anchorWeek : otherWeek(tt.anchorWeek)
+}
 
 export const CLASS_COLORS: Record<ClassColor, { chip: string; dot: string; label: string }> = {
   teal: { chip: 'bg-teal-100 text-teal-800 border-teal-200', dot: 'bg-teal-500', label: 'Teal' },
@@ -35,8 +71,20 @@ export const CLASS_COLORS: Record<ClassColor, { chip: string; dot: string; label
   rose: { chip: 'bg-rose-100 text-rose-800 border-rose-200', dot: 'bg-rose-500', label: 'Rose' },
 }
 
-export function cellKey(periodId: string, dayIndex: number) {
-  return `${periodId}__${dayIndex}`
+export function cellKey(week: WeekId, periodId: string, dayIndex: number) {
+  return `${week}__${periodId}__${dayIndex}`
+}
+
+/**
+ * Upgrades older single-week timetables (keys `${periodId}__${dayIndex}`) to the
+ * fortnightly key format by assigning existing classes to Week A.
+ */
+export function migrateTimetable(tt: Timetable): Timetable {
+  const cells: Record<string, ClassCell> = {}
+  for (const [k, v] of Object.entries(tt.cells ?? {})) {
+    cells[k.split('__').length === 2 ? `A__${k}` : k] = v
+  }
+  return { ...tt, cells }
 }
 
 /** Generates a stable unique id (used for period rows). */
@@ -69,7 +117,7 @@ export function subscribeTimetable(uid: string, cb: (tt: Timetable | null) => vo
   }
   return onSnapshot(
     doc(db, 'users', uid, 'timetable', 'main'),
-    (snap) => cb(snap.exists() ? (snap.data() as Timetable) : null),
+    (snap) => cb(snap.exists() ? migrateTimetable(snap.data() as Timetable) : null),
     () => cb(null),
   )
 }

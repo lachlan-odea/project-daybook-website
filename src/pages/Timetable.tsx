@@ -6,14 +6,18 @@ import {
   CLASS_COLORS,
   DAYS,
   DAYS_SHORT,
+  WEEKS,
   cellKey,
+  currentWeek,
   defaultTimetable,
+  mondayISO,
   newId,
   saveTimetable,
   subscribeTimetable,
   type ClassCell,
   type ClassColor,
   type Timetable,
+  type WeekId,
 } from '../lib/timetable'
 import { firebaseConfigured } from '../lib/firebase'
 
@@ -33,10 +37,12 @@ export default function Timetable() {
   const [dirty, setDirty] = useState(false)
   const [saving, setSaving] = useState(false)
   const [msg, setMsg] = useState('')
-  const [editCell, setEditCell] = useState<{ periodId: string; day: number } | null>(null)
+  const [editCell, setEditCell] = useState<{ week: WeekId; periodId: string; day: number } | null>(null)
+  const [viewWeek, setViewWeek] = useState<WeekId>('A')
 
   const dirtyRef = useRef(false)
   const baselineRef = useRef<Timetable | null>(null)
+  const firstLoad = useRef(true)
   const today = useMemo(() => todayIndex(), [])
 
   useEffect(() => {
@@ -51,6 +57,10 @@ export default function Timetable() {
         const next = remote ?? defaultTimetable()
         setTt(next)
         baselineRef.current = clone(next)
+        if (firstLoad.current) {
+          setViewWeek(currentWeek(next))
+          firstLoad.current = false
+        }
       }
     })
     return unsub
@@ -67,13 +77,29 @@ export default function Timetable() {
     setMsg('')
   }
 
-  const setCell = (periodId: string, day: number, cell: ClassCell | null) => {
+  const setCell = (week: WeekId, periodId: string, day: number, cell: ClassCell | null) => {
     mutate((d) => {
-      const k = cellKey(periodId, day)
+      const k = cellKey(week, periodId, day)
       if (cell && (cell.subject || cell.className)) d.cells[k] = cell
       else delete d.cells[k]
     })
   }
+
+  const setFortnightly = (on: boolean) =>
+    mutate((d) => {
+      d.fortnightly = on
+      if (on && !d.anchorMondayISO) {
+        d.anchorMondayISO = mondayISO(new Date())
+        d.anchorWeek = 'A'
+      }
+      if (!on) setViewWeek('A')
+    })
+
+  const markThisWeek = (week: WeekId) =>
+    mutate((d) => {
+      d.anchorMondayISO = mondayISO(new Date())
+      d.anchorWeek = week
+    })
 
   const updatePeriod = (id: string, patch: Partial<{ label: string; start: string; end: string }>) =>
     mutate((d) => {
@@ -90,7 +116,7 @@ export default function Timetable() {
     mutate((d) => {
       d.periods = d.periods.filter((p) => p.id !== id)
       Object.keys(d.cells).forEach((k) => {
-        if (k.startsWith(`${id}__`)) delete d.cells[k]
+        if (k.includes(`__${id}__`)) delete d.cells[k]
       })
     })
 
@@ -156,6 +182,65 @@ export default function Timetable() {
             </button>
           )}
         </div>
+      </div>
+
+      {/* week controls */}
+      <div className="mt-5 flex flex-wrap items-center gap-x-6 gap-y-3">
+        {tt.fortnightly && (
+          <div className="inline-flex rounded-full border border-navy-100 bg-white p-1">
+            {WEEKS.map((w) => (
+              <button
+                key={w}
+                onClick={() => setViewWeek(w)}
+                className={`flex items-center gap-1.5 rounded-full px-4 py-1.5 text-sm font-bold transition-colors ${
+                  viewWeek === w ? 'bg-navy-800 text-white' : 'text-navy-600 hover:bg-navy-50'
+                }`}
+              >
+                Week {w}
+                {currentWeek(tt) === w && (
+                  <span
+                    className={`rounded-full px-1.5 py-0.5 text-[10px] font-bold ${
+                      viewWeek === w ? 'bg-teal-400 text-navy-950' : 'bg-teal-100 text-teal-700'
+                    }`}
+                  >
+                    This week
+                  </span>
+                )}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {editing && (
+          <label className="inline-flex cursor-pointer items-center gap-2 text-sm font-semibold text-navy-700">
+            <input
+              type="checkbox"
+              checked={!!tt.fortnightly}
+              onChange={(e) => setFortnightly(e.target.checked)}
+              className="h-4 w-4 rounded border-navy-300 text-teal-500 focus:ring-teal-300"
+            />
+            Fortnightly (Week A / Week B)
+          </label>
+        )}
+
+        {editing && tt.fortnightly && (
+          <div className="flex items-center gap-2 text-sm text-navy-500">
+            <span>This calendar week is:</span>
+            {WEEKS.map((w) => (
+              <button
+                key={w}
+                onClick={() => markThisWeek(w)}
+                className={`rounded-lg border px-2.5 py-1 text-xs font-bold transition-colors ${
+                  currentWeek(tt) === w
+                    ? 'border-teal-300 bg-teal-50 text-teal-700'
+                    : 'border-navy-200 text-navy-600 hover:bg-navy-50'
+                }`}
+              >
+                Week {w}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
       {msg && (
@@ -241,7 +326,7 @@ export default function Timetable() {
 
                 {/* day cells */}
                 {DAYS.map((_, day) => {
-                  const cell = tt.cells[cellKey(p.id, day)]
+                  const cell = tt.cells[cellKey(viewWeek, p.id, day)]
                   const color = cell?.color ?? 'teal'
                   return (
                     <td
@@ -252,7 +337,7 @@ export default function Timetable() {
                         <button
                           type="button"
                           disabled={!editing}
-                          onClick={() => editing && setEditCell({ periodId: p.id, day })}
+                          onClick={() => editing && setEditCell({ week: viewWeek, periodId: p.id, day })}
                           className={`w-full rounded-lg border px-2.5 py-2 text-left transition-transform ${CLASS_COLORS[color].chip} ${
                             editing ? 'hover:-translate-y-0.5 hover:shadow-soft' : 'cursor-default'
                           }`}
@@ -266,7 +351,7 @@ export default function Timetable() {
                       ) : editing ? (
                         <button
                           type="button"
-                          onClick={() => setEditCell({ periodId: p.id, day })}
+                          onClick={() => setEditCell({ week: viewWeek, periodId: p.id, day })}
                           className="flex h-full min-h-[52px] w-full items-center justify-center rounded-lg border border-dashed border-navy-200 text-navy-300 transition-colors hover:border-teal-300 hover:bg-teal-50/40 hover:text-teal-500"
                         >
                           <Plus size={16} />
@@ -300,16 +385,16 @@ export default function Timetable() {
 
       {editCell && (
         <CellEditor
-          initial={tt.cells[cellKey(editCell.periodId, editCell.day)]}
+          initial={tt.cells[cellKey(editCell.week, editCell.periodId, editCell.day)]}
           periodLabel={tt.periods.find((p) => p.id === editCell.periodId)?.label ?? ''}
-          dayLabel={DAYS[editCell.day]}
+          dayLabel={`${tt.fortnightly ? `Week ${editCell.week} · ` : ''}${DAYS[editCell.day]}`}
           onClose={() => setEditCell(null)}
           onClear={() => {
-            setCell(editCell.periodId, editCell.day, null)
+            setCell(editCell.week, editCell.periodId, editCell.day, null)
             setEditCell(null)
           }}
           onSave={(cell) => {
-            setCell(editCell.periodId, editCell.day, cell)
+            setCell(editCell.week, editCell.periodId, editCell.day, cell)
             setEditCell(null)
           }}
         />

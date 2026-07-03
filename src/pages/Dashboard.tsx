@@ -3,7 +3,14 @@ import { Link } from 'react-router-dom'
 import { Mic, Sparkles, Waves, Plus, CalendarClock, Pencil } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { useProfile } from '../hooks/useProfile'
-import { CLASS_COLORS, cellKey, subscribeTimetable, type ClassColor, type Timetable } from '../lib/timetable'
+import {
+  CLASS_COLORS,
+  cellKey,
+  currentWeek,
+  subscribeTimetable,
+  type ClassColor,
+  type Timetable,
+} from '../lib/timetable'
 
 function todayIndex() {
   const d = new Date().getDay()
@@ -28,11 +35,12 @@ export default function Dashboard() {
     return subscribeTimetable(user.uid, setTt)
   }, [user])
 
-  // Today's classes drawn from the saved timetable.
+  // Today's classes drawn from the saved timetable, for the current (A/B) week.
+  const week = currentWeek(tt)
   const todaysClasses =
     today >= 0 && tt
       ? tt.periods
-          .map((p) => ({ p, cell: tt.cells[cellKey(p.id, today)] }))
+          .map((p) => ({ p, cell: tt.cells[cellKey(week, p.id, today)] }))
           .filter((row) => row.cell)
       : []
 
@@ -77,6 +85,11 @@ export default function Dashboard() {
             <div className="mb-3 flex items-center justify-between">
               <h2 className="flex items-center gap-2 text-sm font-bold uppercase tracking-wide text-navy-400">
                 <CalendarClock size={15} /> Today’s timetable
+                {tt?.fortnightly && (
+                  <span className="rounded-full bg-teal-100 px-2 py-0.5 text-[10px] font-bold text-teal-700">
+                    Week {week}
+                  </span>
+                )}
               </h2>
               <Link
                 to="/app/timetable"
