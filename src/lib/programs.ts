@@ -72,6 +72,20 @@ export async function getProgram(uid: string, id: string): Promise<{ program: Pr
   }
 }
 
+function serializeLesson(l: Lesson, i: number) {
+  return {
+    order: i,
+    title: l.title ?? '',
+    outcomes: l.outcomes ?? [],
+    learningIntentions: l.learningIntentions ?? [],
+    successCriteria: l.successCriteria ?? [],
+    activities: l.activities ?? [],
+    resources: l.resources ?? [],
+    keywords: l.keywords ?? [],
+    assessment: l.assessment ?? [],
+  }
+}
+
 export async function saveProgram(
   uid: string,
   program: Omit<Program, 'id' | 'createdAt' | 'lessonCount'>,
@@ -91,20 +105,36 @@ export async function saveProgram(
   const batch = writeBatch(database)
   lessons.forEach((l, i) => {
     const lref = doc(collection(database, 'users', uid, 'programs', ref.id, 'lessons'))
-    batch.set(lref, {
-      order: i,
-      title: l.title ?? '',
-      outcomes: l.outcomes ?? [],
-      learningIntentions: l.learningIntentions ?? [],
-      successCriteria: l.successCriteria ?? [],
-      activities: l.activities ?? [],
-      resources: l.resources ?? [],
-      keywords: l.keywords ?? [],
-      assessment: l.assessment ?? [],
-    })
+    batch.set(lref, serializeLesson(l, i))
   })
   await batch.commit()
   return ref.id
+}
+
+/** Updates a program's metadata and fully replaces its lessons (handles edits, adds, removals, reorders). */
+export async function updateProgram(
+  uid: string,
+  id: string,
+  meta: Pick<Program, 'name' | 'subject' | 'stage' | 'description'>,
+  lessons: Lesson[],
+) {
+  if (!db) throw { code: 'unavailable' }
+  const database = db
+  const existing = await getDocs(collection(database, 'users', uid, 'programs', id, 'lessons'))
+  const batch = writeBatch(database)
+  existing.docs.forEach((d) => batch.delete(d.ref))
+  lessons.forEach((l, i) => {
+    const lref = doc(collection(database, 'users', uid, 'programs', id, 'lessons'))
+    batch.set(lref, serializeLesson(l, i))
+  })
+  batch.update(doc(database, 'users', uid, 'programs', id), {
+    name: meta.name,
+    subject: meta.subject,
+    stage: meta.stage,
+    description: meta.description ?? '',
+    lessonCount: lessons.length,
+  })
+  await batch.commit()
 }
 
 export async function deleteProgram(uid: string, id: string) {
