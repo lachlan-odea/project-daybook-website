@@ -12,6 +12,7 @@ import {
   type ClassColor,
   type Timetable,
 } from '../lib/timetable'
+import { subscribePrograms, type Program } from '../lib/programs'
 
 function todayIndex() {
   const d = new Date().getDay()
@@ -22,6 +23,7 @@ export default function Dashboard() {
   const { user } = useAuth()
   const { profile } = useProfile()
   const [tt, setTt] = useState<Timetable | null>(null)
+  const [programs, setPrograms] = useState<Program[] | null>(null)
 
   const displayName = profile?.displayName || user?.displayName || user?.email?.split('@')[0] || 'Teacher'
   const firstName = displayName.split(' ')[0]
@@ -34,6 +36,11 @@ export default function Dashboard() {
   useEffect(() => {
     if (!user) return
     return subscribeTimetable(user.uid, setTt)
+  }, [user])
+
+  useEffect(() => {
+    if (!user) return
+    return subscribePrograms(user.uid, setPrograms)
   }, [user])
 
   // Today's classes drawn from the saved timetable, for the current (A/B) week.
@@ -61,23 +68,25 @@ export default function Dashboard() {
         </button>
       </div>
 
-      {/* Setup banner */}
-      <div className="mt-6 flex flex-col gap-3 rounded-2xl border border-teal-200 bg-gradient-to-br from-teal-50 to-white p-5 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex items-start gap-3">
-          <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-teal-500 text-white">
-            <Sparkles size={18} />
-          </span>
-          <div>
-            <p className="font-bold text-navy-900">You’re signed in — welcome aboard!</p>
-            <p className="text-sm text-navy-500">
-              Upload your first teaching program so Curriculum Intelligence can start matching your lessons.
-            </p>
+      {/* Setup banner — only until the first program is uploaded */}
+      {programs && programs.length === 0 && (
+        <div className="mt-6 flex flex-col gap-3 rounded-2xl border border-teal-200 bg-gradient-to-br from-teal-50 to-white p-5 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-start gap-3">
+            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-teal-500 text-white">
+              <Sparkles size={18} />
+            </span>
+            <div>
+              <p className="font-bold text-navy-900">You’re signed in — welcome aboard!</p>
+              <p className="text-sm text-navy-500">
+                Upload your first teaching program so Curriculum Intelligence can start matching your lessons.
+              </p>
+            </div>
           </div>
+          <Link to="/app/programs" className="btn-navy shrink-0 text-sm">
+            <Plus size={16} /> Upload a program
+          </Link>
         </div>
-        <Link to="/app/programs" className="btn-navy shrink-0 text-sm">
-          <Plus size={16} /> Upload a program
-        </Link>
-      </div>
+      )}
 
       <div className="mt-6 grid gap-6 lg:grid-cols-3">
         {/* Today's timetable */}
