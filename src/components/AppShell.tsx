@@ -13,10 +13,12 @@ import {
   Bell,
   Menu,
   X,
+  Download,
 } from 'lucide-react'
 import { LogoMark } from './Logo'
 import { useAuth } from '../context/AuthContext'
 import { useProfile } from '../hooks/useProfile'
+import { usePwaInstall } from '../hooks/usePwaInstall'
 
 const nav = [
   { to: '/app', label: 'Dashboard', icon: LayoutDashboard, end: true },
@@ -41,6 +43,7 @@ function initialsOf(name: string) {
 export default function AppShell() {
   const { user, logout } = useAuth()
   const { profile } = useProfile()
+  const { canInstall, install } = usePwaInstall()
   const navigate = useNavigate()
   const location = useLocation()
   const [menuOpen, setMenuOpen] = useState(false)
@@ -112,7 +115,15 @@ export default function AppShell() {
           ),
         )}
       </nav>
-      <div className="border-t border-navy-100 p-4">
+      <div className="space-y-1 border-t border-navy-100 p-4">
+        {canInstall && (
+          <button
+            onClick={install}
+            className="flex w-full items-center gap-3 rounded-xl bg-teal-50 px-3 py-2.5 text-sm font-semibold text-teal-700 hover:bg-teal-100"
+          >
+            <Download size={18} /> Install app
+          </button>
+        )}
         <button
           onClick={handleLogout}
           className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-navy-600 hover:bg-navy-50"
