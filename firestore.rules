@@ -1,6 +1,6 @@
 rules_version = '2';
 
-// Project Daybook Firestore security rules.
+// daywise Firestore security rules.
 // Each user can only read and write their own document tree under /users/{uid},
 // including all subcollections (timetable, and future entries/programs/reports).
 service cloud.firestore {

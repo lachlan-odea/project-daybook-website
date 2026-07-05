@@ -4,7 +4,7 @@ export default {
   theme: {
     extend: {
       colors: {
-        // Brand palette derived from the Project Daybook logo
+        // Brand palette derived from the daywise logo
         navy: {
           50: '#eef2fb',
           100: '#d6def4',

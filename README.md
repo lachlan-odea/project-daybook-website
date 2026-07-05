@@ -1,6 +1,6 @@
-# Project Daybook — Marketing Website
+# daywise — Marketing Website
 
-A best-in-class SaaS marketing site for **Project Daybook**, the AI-powered teacher
+A best-in-class SaaS marketing site for **daywise**, the AI-powered teacher
 productivity platform that turns everyday teaching into professional evidence — automatically.
 
 > **Teach. Record. Evidence. Automated.**

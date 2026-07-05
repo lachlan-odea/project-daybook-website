@@ -37,7 +37,7 @@ const rows: Row[] = [
         Say what happened. <span className="text-gradient-teal">Get the paperwork.</span>
       </>
     ),
-    text: "A 30-second voice note becomes a full, professional record. Daybook identifies the lesson from your timetable and curriculum, then writes the evidence in your voice — not a generic template.",
+    text: "A 30-second voice note becomes a full, professional record. daywise identifies the lesson from your timetable and curriculum, then writes the evidence in your voice — not a generic template.",
     bullets: [
       'Voice or text — whatever is fastest',
       'Auto-matches to the lesson you most likely taught',

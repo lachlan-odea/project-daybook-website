@@ -38,7 +38,7 @@ if (firebaseConfigured) {
         isTokenAutoRefreshEnabled: true,
       })
     } catch (e) {
-      console.warn('[Project Daybook] App Check could not be initialized.', e)
+      console.warn('[daywise] App Check could not be initialized.', e)
     }
   }
 
@@ -48,7 +48,7 @@ if (firebaseConfigured) {
   db = initializeFirestore(app, { ignoreUndefinedProperties: true })
 } else {
   console.warn(
-    '[Project Daybook] Firebase is not configured. Add your VITE_FIREBASE_* values ' +
+    '[daywise] Firebase is not configured. Add your VITE_FIREBASE_* values ' +
       '(.env locally, GitHub secrets in CI). See FIREBASE_SETUP.md.',
   )
 }

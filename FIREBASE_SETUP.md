@@ -1,6 +1,6 @@
 # Firebase setup guide
 
-Project Daybook uses **Firebase Authentication** (email/password + Google + Microsoft) and
+daywise uses **Firebase Authentication** (email/password + Google + Microsoft) and
 **Cloud Firestore** (for user profiles and, later, your teaching data). Follow these steps once
 to get login working locally and in production.
 
@@ -13,7 +13,7 @@ to get login working locally and in production.
 
 ## 2. Register a Web app + get your config
 
-1. In the project, click the **Web** icon (`</>`) to add an app. Nickname it `Project Daybook Web`.
+1. In the project, click the **Web** icon (`</>`) to add an app. Nickname it `daywise Web`.
 2. You **don't** need Firebase Hosting (we deploy on GitHub Pages).
 3. Copy the `firebaseConfig` values shown — you'll need `apiKey`, `authDomain`, `projectId`,
    `storageBucket`, `messagingSenderId`, and `appId`.

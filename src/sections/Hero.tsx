@@ -48,7 +48,7 @@ export default function Hero() {
             className="mt-6 max-w-xl text-lg leading-relaxed text-navy-600"
           >
             Stop writing reflections, annotating programs and compiling evidence by hand. Just record what happened in
-            class — by voice or text — and Project Daybook's AI does the rest.
+            class — by voice or text — and daywise's AI does the rest.
           </motion.p>
 
           <motion.div

@@ -81,9 +81,9 @@ export default function AppShell() {
     <>
       <div className="flex h-16 items-center gap-2.5 border-b border-navy-100 px-6">
         <LogoMark size={34} />
-        <span className="flex items-baseline text-lg font-extrabold tracking-tight">
-          <span className="text-navy-800">Project</span>
-          <span className="ml-1 text-teal-500">Daybook</span>
+        <span className="flex items-baseline text-lg font-extrabold lowercase tracking-tight">
+          <span className="text-navy-800">day</span>
+          <span className="text-teal-500">wise</span>
         </span>
       </div>
       <nav className="flex-1 space-y-1 p-4">

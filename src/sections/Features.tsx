@@ -23,7 +23,7 @@ const features = [
   {
     icon: BookOpen,
     title: 'Programs',
-    text: 'Upload and manage teaching programs in any format. Daybook keeps them structured, searchable and linked to your classes.',
+    text: 'Upload and manage teaching programs in any format. daywise keeps them structured, searchable and linked to your classes.',
     accent: 'text-teal-600 bg-teal-50',
   },
   {
@@ -50,7 +50,7 @@ export default function Features() {
             One AI teaching assistant. <span className="text-gradient-teal">Everything you need.</span>
           </h2>
           <p className="mt-4 text-lg text-navy-600">
-            Every part of Project Daybook works together — from the moment you upload a program to the instant you export
+            Every part of daywise works together — from the moment you upload a program to the instant you export
             a report.
           </p>
         </Reveal>

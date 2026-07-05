@@ -37,7 +37,7 @@ const PLAN_META: Record<Plan, { price: string; blurb: string; features: string[]
   },
   perpetual: {
     price: 'Free forever',
-    blurb: 'Complimentary lifetime access — thank you for helping shape Project Daybook.',
+    blurb: 'Complimentary lifetime access — thank you for helping shape daywise.',
     features: [
       'Everything in Teacher Pro',
       'Unlimited programs & classes',
@@ -253,7 +253,7 @@ export default function Settings() {
 
         <div className="space-y-6">
           {/* PROFILE */}
-          <SectionCard id="profile" icon={UserIcon} title="Profile" desc="How you appear across Project Daybook.">
+          <SectionCard id="profile" icon={UserIcon} title="Profile" desc="How you appear across daywise.">
             <form onSubmit={saveProfile} className="space-y-5">
               <div className="flex items-center gap-4">
                 {user?.photoURL ? (
@@ -405,8 +405,8 @@ export default function Settings() {
             </div>
             {plan === 'perpetual' ? (
               <p className="mt-3 text-xs text-navy-400">
-                You have complimentary lifetime access — you’ll never be charged. Thank you for helping test Project
-                Daybook. 💚
+                You have complimentary lifetime access — you’ll never be charged. Thank you for helping test
+                daywise. 💚
               </p>
             ) : (
               <p className="mt-3 text-xs text-navy-400">

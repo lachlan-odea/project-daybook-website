@@ -14,7 +14,7 @@ export default function ProtectedRoute({ children }: { children: ReactNode }) {
         <div className="animate-float">
           <LogoMark size={56} />
         </div>
-        <p className="text-sm font-semibold text-navy-400">Loading your daybook…</p>
+        <p className="text-sm font-semibold text-navy-400">Loading…</p>
       </div>
     )
   }

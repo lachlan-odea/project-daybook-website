@@ -32,9 +32,9 @@ export default function AuthLayout({
         />
         <Link to="/" className="relative flex items-center gap-2.5">
           <LogoMark size={40} />
-          <span className="flex items-baseline text-xl font-extrabold tracking-tight">
-            <span className="text-white">Project</span>
-            <span className="ml-1.5 text-teal-400">Daybook</span>
+          <span className="flex items-baseline text-xl font-extrabold lowercase tracking-tight">
+            <span className="text-white">day</span>
+            <span className="text-teal-400">wise</span>
           </span>
         </Link>
 
@@ -64,9 +64,9 @@ export default function AuthLayout({
         <div className="w-full max-w-md">
           <Link to="/" className="mb-8 flex items-center gap-2.5 lg:hidden">
             <LogoMark size={36} />
-            <span className="flex items-baseline text-lg font-extrabold tracking-tight">
-              <span className="text-navy-800">Project</span>
-              <span className="ml-1.5 text-teal-500">Daybook</span>
+            <span className="flex items-baseline text-lg font-extrabold lowercase tracking-tight">
+              <span className="text-navy-800">day</span>
+              <span className="text-teal-500">wise</span>
             </span>
           </Link>
           <h1 className="text-2xl font-extrabold tracking-tight text-navy-900 sm:text-3xl">{title}</h1>

@@ -34,9 +34,9 @@ export default function Footer() {
           <div className="max-w-xs">
             <div className="flex items-center gap-2.5">
               <LogoMark size={40} />
-              <span className="flex items-baseline text-xl font-extrabold tracking-tight">
-                <span className="text-white">Project</span>
-                <span className="ml-1.5 text-teal-400">Daybook</span>
+              <span className="flex items-baseline text-xl font-extrabold lowercase tracking-tight">
+                <span className="text-white">day</span>
+                <span className="text-teal-400">wise</span>
               </span>
             </div>
             <p className="mt-4 text-sm leading-relaxed text-navy-300">
@@ -65,7 +65,7 @@ export default function Footer() {
 
         <div className="mt-14 flex flex-col items-center justify-between gap-4 border-t border-white/10 pt-8 sm:flex-row">
           <p className="text-xs text-navy-400">
-            © {2026} Project Daybook. All rights reserved. Built for teachers, by educators.
+            © {2026} daywise. All rights reserved. Built for teachers, by educators.
           </p>
           <div className="flex items-center gap-5 text-xs text-navy-400">
             <a href="#" className="hover:text-teal-300">

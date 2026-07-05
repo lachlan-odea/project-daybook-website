@@ -74,7 +74,7 @@ export default function History() {
           </span>
           <h2 className="mt-5 text-lg font-bold text-navy-900">No entries yet</h2>
           <p className="mx-auto mt-2 max-w-md text-sm text-navy-500">
-            Record what happened in a lesson by voice or text — Project Daybook turns it into professional evidence.
+            Record what happened in a lesson by voice or text — daywise turns it into professional evidence.
           </p>
           <Link to="/app/record" className="btn-primary mx-auto mt-6 text-sm">
             <Mic size={16} /> Record your first lesson

@@ -35,7 +35,7 @@ export default function Navbar() {
         }`}
       >
         <nav className="container-page flex h-[68px] items-center justify-between">
-          <a href="#top" className="flex items-center" aria-label="Project Daybook home">
+          <a href="#top" className="flex items-center" aria-label="daywise home">
             <Logo markSize={38} />
           </a>
 

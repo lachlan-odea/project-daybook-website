@@ -6,7 +6,7 @@ import Reveal from '../components/Reveal'
 const faqs = [
   {
     q: 'How does the AI know which lesson I taught?',
-    a: 'When you record, Daybook cross-references your timetable, your linked teaching programs and the lesson database built by Curriculum Intelligence. It combines the time you recorded, the class, and the keywords in your note to identify the lesson you most likely taught — and you can always confirm or adjust the match.',
+    a: 'When you record, daywise cross-references your timetable, your linked teaching programs and the lesson database built by Curriculum Intelligence. It combines the time you recorded, the class, and the keywords in your note to identify the lesson you most likely taught — and you can always confirm or adjust the match.',
   },
   {
     q: 'What file types can I upload for my programs?',
@@ -18,7 +18,7 @@ const faqs = [
   },
   {
     q: 'Does the evidence sound like me, or like a robot?',
-    a: 'Daybook writes in professional teaching language grounded in what you actually said and what your program specifies. The output reads like something you would have written yourself — and everything is fully editable before you save or export it.',
+    a: 'daywise writes in professional teaching language grounded in what you actually said and what your program specifies. The output reads like something you would have written yourself — and everything is fully editable before you save or export it.',
   },
   {
     q: 'Can I record by typing instead of speaking?',
@@ -78,7 +78,7 @@ export default function FAQ() {
             Questions, answered
           </h2>
           <p className="mt-4 text-lg text-navy-600">
-            Everything you need to know about how Project Daybook fits into your teaching day.
+            Everything you need to know about how daywise fits into your teaching day.
           </p>
           <a href="#cta" className="btn-navy mt-6 text-sm">
             Still curious? Talk to us

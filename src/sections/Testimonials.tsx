@@ -54,7 +54,7 @@ export default function Testimonials() {
             Time back where it belongs
           </h2>
           <p className="mt-4 text-lg text-navy-600">
-            Teachers use Project Daybook to spend less time documenting and more time doing what they do best.
+            Teachers use daywise to spend less time documenting and more time doing what they do best.
           </p>
         </Reveal>
 

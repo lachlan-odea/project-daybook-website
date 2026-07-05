@@ -201,7 +201,7 @@ export default function Dashboard() {
               </>
             ) : (
               <p className="mt-2 text-sm text-navy-500">
-                Record a lesson and Daybook will suggest what to teach next, based on your programs.
+                Record a lesson and daywise will suggest what to teach next, based on your programs.
               </p>
             )}
           </div>

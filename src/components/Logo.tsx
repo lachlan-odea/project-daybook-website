@@ -6,9 +6,9 @@ interface LogoProps {
 }
 
 /**
- * Project Daybook logo mark: an open book with a checklist on the left page,
+ * daywise logo mark: an open book with a checklist on the left page,
  * a completed checkmark on the right, and a sparkle above — echoing the
- * supplied brand artwork. Pairs with the "Project Daybook" wordmark.
+ * supplied brand artwork. Pairs with the "daywise" wordmark.
  */
 export function LogoMark({ size = 40 }: { size?: number }) {
   return (
@@ -62,9 +62,9 @@ export default function Logo({
     <span className={`inline-flex items-center gap-2.5 ${className}`}>
       <LogoMark size={markSize} />
       {showWordmark && (
-        <span className="flex items-baseline text-[1.35rem] font-extrabold leading-none tracking-tight">
-          <span className={variant === 'dark' ? 'text-navy-800' : 'text-white'}>Project</span>
-          <span className="ml-1.5 text-teal-500">Daybook</span>
+        <span className="flex items-baseline text-[1.4rem] font-extrabold lowercase leading-none tracking-tight">
+          <span className={variant === 'dark' ? 'text-navy-800' : 'text-white'}>day</span>
+          <span className="text-teal-500">wise</span>
         </span>
       )}
     </span>

@@ -14,8 +14,8 @@ export default defineConfig({
       includeAssets: ['favicon.svg', 'apple-touch-icon.png'],
       // The installed app is scoped to launch into the app (/app), not the marketing site.
       manifest: {
-        name: 'Project Daybook',
-        short_name: 'Daybook',
+        name: 'daywise',
+        short_name: 'daywise',
         description: 'Turn everyday teaching into professional evidence — automatically.',
         id: `${BASE}app`,
         start_url: `${BASE}app`,

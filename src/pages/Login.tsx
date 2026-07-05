@@ -117,7 +117,7 @@ export default function Login() {
       </form>
 
       <p className="mt-6 text-center text-sm text-navy-500">
-        New to Project Daybook?{' '}
+        New to daywise?{' '}
         <Link to="/signup" className="font-semibold text-teal-600 hover:text-teal-700">
           Create an account
         </Link>

@@ -13,7 +13,7 @@ const steps = [
     icon: CalendarClock,
     step: '02',
     title: 'Link your timetable',
-    text: 'Connect your classes and periods to the right programs. Now Daybook knows what you teach, when you teach it, and to whom — all term long.',
+    text: 'Connect your classes and periods to the right programs. Now daywise knows what you teach, when you teach it, and to whom — all term long.',
     color: 'from-sky-500 to-sky-700',
   },
   {
@@ -27,7 +27,7 @@ const steps = [
     icon: Sparkles,
     step: '04',
     title: 'Get professional evidence',
-    text: 'Daybook writes your annotations, assessment evidence, differentiation, reflections and next-lesson actions — stored in a searchable database, ready to report on instantly.',
+    text: 'daywise writes your annotations, assessment evidence, differentiation, reflections and next-lesson actions — stored in a searchable database, ready to report on instantly.',
     color: 'from-teal-400 to-sky-500',
   },
 ]

@@ -1,4 +1,4 @@
-// Generates PWA icons from the Project Daybook logo mark.
+// Generates PWA icons from the daywise logo mark.
 // Run with: node scripts/generate-icons.mjs
 import sharp from 'sharp'
 import { fileURLToPath } from 'node:url'

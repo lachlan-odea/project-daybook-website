@@ -35,7 +35,7 @@ export default function Problem() {
           </h2>
           <p className="mt-4 text-lg text-navy-600">
             Documentation is essential — but writing it by hand costs the profession millions of hours every year. Project
-            Daybook gives that time back.
+            daywise gives that time back.
           </p>
         </Reveal>
 
