@@ -1,20 +1,32 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Search, X, BookOpen, CalendarClock, FileText, Loader2, CornerDownLeft } from 'lucide-react'
+import { Search, X, BookOpen, CalendarClock, FileText, Loader2, CornerDownLeft, NotebookPen } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { getProgramList, getProgram } from '../lib/programs'
 import { getTimetableOnce } from '../lib/timetable'
+import { getEntriesOnce } from '../lib/entries'
 
-type Item =
-  | { type: 'program'; title: string; subtitle: string; text: string; to: string }
-  | { type: 'lesson'; title: string; subtitle: string; text: string; to: string }
-  | { type: 'class'; title: string; subtitle: string; text: string; to: string }
+type ItemType = 'program' | 'lesson' | 'class' | 'entry'
+interface Item {
+  type: ItemType
+  title: string
+  subtitle: string
+  text: string
+  to: string
+}
 
 const TYPE_META = {
   program: { label: 'Programs', icon: BookOpen },
   lesson: { label: 'Lessons', icon: FileText },
   class: { label: 'Classes', icon: CalendarClock },
+  entry: { label: 'Diary', icon: NotebookPen },
 } as const
+
+function formatDate(iso: string) {
+  const [y, m, d] = iso.split('-').map(Number)
+  if (!y) return iso
+  return new Date(y, (m || 1) - 1, d || 1).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' })
+}
 
 export default function GlobalSearch() {
   const { user } = useAuth()
@@ -46,7 +58,11 @@ export default function GlobalSearch() {
     ;(async () => {
       try {
         const items: Item[] = []
-        const [list, tt] = await Promise.all([getProgramList(user.uid), getTimetableOnce(user.uid)])
+        const [list, tt, entries] = await Promise.all([
+          getProgramList(user.uid),
+          getTimetableOnce(user.uid),
+          getEntriesOnce(user.uid),
+        ])
         const fulls = await Promise.all(list.map((p) => (p.id ? getProgram(user.uid, p.id) : null)))
         for (const res of fulls) {
           if (!res) continue
@@ -84,6 +100,21 @@ export default function GlobalSearch() {
               to: '/app/timetable',
             })
           }
+        }
+        for (const e of entries) {
+          if (!e.id) continue
+          const ev = e.evidence
+          items.push({
+            type: 'entry',
+            title: e.lessonTitle || [e.subject, e.className].filter(Boolean).join(' · ') || 'Lesson entry',
+            subtitle: [formatDate(e.date), e.subject, e.className].filter(Boolean).join(' · '),
+            text: `${e.note} ${e.subject} ${e.className} ${e.lessonTitle ?? ''} ${(e.outcomes ?? []).join(' ')} ${
+              ev?.annotations ?? ''
+            } ${ev?.assessmentEvidence ?? ''} ${ev?.reflection ?? ''} ${ev?.differentiation ?? ''} ${(
+              ev?.nextSteps ?? []
+            ).join(' ')}`.toLowerCase(),
+            to: `/app/history/${e.id}`,
+          })
         }
         if (alive) setCorpus(items)
       } finally {
@@ -197,7 +228,7 @@ export default function GlobalSearch() {
               ) : results.length === 0 ? (
                 <p className="px-3 py-8 text-center text-sm text-navy-400">No matches for “{query}”.</p>
               ) : (
-                (['program', 'lesson', 'class'] as const).map((type) => {
+                (['program', 'lesson', 'class', 'entry'] as const).map((type) => {
                   const group = results.filter((r) => r.type === type)
                   if (!group.length) return null
                   const Meta = TYPE_META[type]

@@ -4,6 +4,7 @@ import {
   deleteDoc,
   doc,
   getDoc,
+  getDocs,
   onSnapshot,
   orderBy,
   query,
@@ -58,6 +59,13 @@ export function subscribeEntries(uid: string, cb: (entries: LessonEntry[]) => vo
     (snap) => cb(snap.docs.map((d) => ({ id: d.id, ...(d.data() as LessonEntry) }))),
     () => cb([]),
   )
+}
+
+/** One-time fetch of all diary entries (for search). */
+export async function getEntriesOnce(uid: string): Promise<LessonEntry[]> {
+  if (!db) return []
+  const snap = await getDocs(query(collection(db, 'users', uid, 'entries'), orderBy('createdAt', 'desc')))
+  return snap.docs.map((d) => ({ id: d.id, ...(d.data() as LessonEntry) }))
 }
 
 export async function getEntry(uid: string, id: string): Promise<LessonEntry | null> {
