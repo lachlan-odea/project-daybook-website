@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Mic, Sparkles, Waves, Plus, CalendarClock, Pencil } from 'lucide-react'
+import { Mic, Sparkles, Waves, Plus, CalendarClock, Pencil, CalendarDays, Loader2, X, Check } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { useProfile } from '../hooks/useProfile'
 import {
@@ -9,11 +9,18 @@ import {
   currentWeek,
   effectiveTime,
   subscribeTimetable,
+  getTimetableOnce,
+  defaultTimetable,
+  saveTimetable,
+  mondayISO,
+  termWeekNumber,
   type ClassColor,
   type Timetable,
+  type WeekId,
 } from '../lib/timetable'
 import { subscribePrograms, type Program } from '../lib/programs'
 import { subscribeEntries, type LessonEntry } from '../lib/entries'
+import { updateUserProfileDoc } from '../lib/profile'
 
 function todayIndex() {
   const d = new Date().getDay()
@@ -34,6 +41,40 @@ export default function Dashboard() {
   const today = useMemo(() => todayIndex(), [])
   const dateStr = now.toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'long' })
   const nowHHMM = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`
+
+  // Term setup
+  const [showTerm, setShowTerm] = useState(false)
+  const [tStart, setTStart] = useState('')
+  const [tNum, setTNum] = useState(1)
+  const [tWeek, setTWeek] = useState<WeekId>('A')
+  const [savingTerm, setSavingTerm] = useState(false)
+  const termWeek = termWeekNumber(profile?.termStart, now)
+
+  const openTerm = () => {
+    setTStart(profile?.termStart ?? '')
+    setTNum(profile?.termNumber ?? 1)
+    setTWeek((tt?.anchorWeek ?? 'A') as WeekId)
+    setShowTerm(true)
+  }
+
+  const saveTerm = async () => {
+    if (!user || !tStart) return
+    setSavingTerm(true)
+    try {
+      await updateUserProfileDoc(user.uid, { termStart: tStart, termNumber: tNum })
+      // Sync the timetable's A/B anchor to the first day of term so the diary lines up.
+      const base = (await getTimetableOnce(user.uid)) ?? defaultTimetable()
+      const [y, m, d] = tStart.split('-').map(Number)
+      await saveTimetable(user.uid, {
+        ...base,
+        anchorMondayISO: mondayISO(new Date(y, (m || 1) - 1, d || 1)),
+        anchorWeek: base.fortnightly ? tWeek : 'A',
+      })
+      setShowTerm(false)
+    } finally {
+      setSavingTerm(false)
+    }
+  }
 
   useEffect(() => {
     if (!user) return
@@ -80,9 +121,24 @@ export default function Dashboard() {
             Good day, {firstName} 👋
           </h1>
         </div>
-        <Link to="/app/record" className="btn-primary text-sm">
-          <Mic size={17} /> Record a lesson
-        </Link>
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            onClick={openTerm}
+            className={`flex items-center gap-1.5 rounded-full border px-3 py-2 text-sm font-semibold transition-colors ${
+              profile?.termStart
+                ? 'border-navy-200 bg-white text-navy-700 hover:bg-navy-50'
+                : 'border-teal-300 bg-teal-50 text-teal-700 hover:bg-teal-100'
+            }`}
+          >
+            <CalendarDays size={16} />
+            {profile?.termStart && termWeek
+              ? `Week ${termWeek}${profile.termNumber ? ` · Term ${profile.termNumber}` : ''}`
+              : 'Set first day of term'}
+          </button>
+          <Link to="/app/record" className="btn-primary text-sm">
+            <Mic size={17} /> Record a lesson
+          </Link>
+        </div>
       </div>
 
       {/* Setup banner — only until the first program is uploaded */}
@@ -223,6 +279,81 @@ export default function Dashboard() {
           </div>
         </div>
       </div>
+
+      {showTerm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-navy-950/50" onClick={() => !savingTerm && setShowTerm(false)} />
+          <div className="relative w-full max-w-md rounded-3xl bg-white p-6 shadow-card">
+            <button
+              onClick={() => setShowTerm(false)}
+              className="absolute right-4 top-4 flex h-8 w-8 items-center justify-center rounded-full text-navy-400 hover:bg-navy-50"
+              aria-label="Close"
+            >
+              <X size={18} />
+            </button>
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-teal-50 text-teal-600">
+              <CalendarDays size={22} />
+            </div>
+            <h3 className="mt-4 text-lg font-bold text-navy-900">First day of term</h3>
+            <p className="mt-1 text-sm text-navy-500">
+              Set the term start so your timetable weeks and teaching diary line up correctly.
+            </p>
+
+            <div className="mt-5 space-y-4">
+              <label className="block">
+                <span className="mb-1.5 block text-sm font-semibold text-navy-800">First day of term</span>
+                <input
+                  type="date"
+                  value={tStart}
+                  onChange={(e) => setTStart(e.target.value)}
+                  className="w-full rounded-xl border border-navy-200 bg-white px-4 py-2.5 text-navy-900 outline-none focus:border-teal-400 focus:ring-4 focus:ring-teal-100"
+                />
+              </label>
+              <label className="block">
+                <span className="mb-1.5 block text-sm font-semibold text-navy-800">Term</span>
+                <select
+                  value={tNum}
+                  onChange={(e) => setTNum(Number(e.target.value))}
+                  className="w-full rounded-xl border border-navy-200 bg-white px-4 py-2.5 text-navy-900 outline-none focus:border-teal-400 focus:ring-4 focus:ring-teal-100"
+                >
+                  {[1, 2, 3, 4].map((t) => (
+                    <option key={t} value={t}>
+                      Term {t}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              {tt?.fortnightly && (
+                <div>
+                  <span className="mb-1.5 block text-sm font-semibold text-navy-800">Term starts in</span>
+                  <div className="inline-flex rounded-full border border-navy-100 bg-white p-1">
+                    {(['A', 'B'] as const).map((w) => (
+                      <button
+                        key={w}
+                        onClick={() => setTWeek(w)}
+                        className={`rounded-full px-4 py-1.5 text-sm font-bold transition-colors ${
+                          tWeek === w ? 'bg-navy-800 text-white' : 'text-navy-600 hover:bg-navy-50'
+                        }`}
+                      >
+                        Week {w}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="mt-6 flex justify-end gap-3">
+              <button onClick={() => setShowTerm(false)} disabled={savingTerm} className="btn-ghost text-sm">
+                Cancel
+              </button>
+              <button onClick={saveTerm} disabled={savingTerm || !tStart} className="btn-primary text-sm">
+                {savingTerm ? <Loader2 size={16} className="animate-spin" /> : <Check size={16} />} Save
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </main>
   )
 }

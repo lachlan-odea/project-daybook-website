@@ -74,6 +74,15 @@ export function mondayISO(d: Date): string {
   return `${m.getFullYear()}-${mm}-${dd}`
 }
 
+/** The teaching-week number (1-based) for a date, given the first day of term. Null before term start. */
+export function termWeekNumber(termStartISO: string | undefined, now: Date = new Date()): number | null {
+  if (!termStartISO) return null
+  const [y, m, d] = termStartISO.split('-').map(Number)
+  const start = mondayOf(new Date(y, (m || 1) - 1, d || 1))
+  const weeks = Math.round((mondayOf(now).getTime() - start.getTime()) / (7 * 86_400_000))
+  return weeks >= 0 ? weeks + 1 : null
+}
+
 /** Works out whether a given date falls in Week A or Week B, from the anchor. */
 export function currentWeek(tt: Timetable | null, now: Date = new Date()): WeekId {
   if (!tt?.fortnightly || !tt.anchorMondayISO || !tt.anchorWeek) return 'A'
