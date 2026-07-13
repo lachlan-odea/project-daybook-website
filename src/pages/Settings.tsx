@@ -16,7 +16,7 @@ import {
 } from 'lucide-react'
 import { useAuth, authErrorMessage } from '../context/AuthContext'
 import { useProfile } from '../hooks/useProfile'
-import { updateUserProfileDoc, ROLE_OPTIONS, PLAN_LABELS, type Plan } from '../lib/profile'
+import { updateUserProfileDoc, ROLE_OPTIONS, STATE_OPTIONS, PLAN_LABELS, type Plan } from '../lib/profile'
 import { firebaseConfigured } from '../lib/firebase'
 
 const PLAN_META: Record<Plan, { price: string; blurb: string; features: string[] }> = {
@@ -136,7 +136,7 @@ export default function Settings() {
   const [name, setName] = useState('')
   const [school, setSchool] = useState('')
   const [role, setRole] = useState('')
-  const [phone, setPhone] = useState('')
+  const [stateLoc, setStateLoc] = useState('')
   const [savingProfile, setSavingProfile] = useState(false)
   const [profileMsg, setProfileMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
   const seeded = useRef(false)
@@ -149,7 +149,7 @@ export default function Settings() {
       setName(profile?.displayName ?? user?.displayName ?? '')
       setSchool(profile?.school ?? '')
       setRole(profile?.role ?? '')
-      setPhone(profile?.phone ?? '')
+      setStateLoc(profile?.state ?? '')
       seeded.current = true
     }
   }, [profile, profileLoading, user])
@@ -161,7 +161,7 @@ export default function Settings() {
     setSavingProfile(true)
     try {
       if (name && name !== user.displayName) await updateDisplayName(name)
-      await updateUserProfileDoc(user.uid, { displayName: name, school, role, phone })
+      await updateUserProfileDoc(user.uid, { displayName: name, school, role, state: stateLoc })
       setProfileMsg({ type: 'success', text: 'Profile saved.' })
     } catch (err) {
       setProfileMsg({ type: 'error', text: authErrorMessage(err) })
@@ -300,8 +300,15 @@ export default function Settings() {
                     />
                   </div>
                 </Field>
-                <Field label="Phone (optional)">
-                  <input className={inputCls} value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="0400 000 000" />
+                <Field label="State / territory">
+                  <select className={inputCls} value={stateLoc} onChange={(e) => setStateLoc(e.target.value)}>
+                    <option value="">Select a state…</option>
+                    {STATE_OPTIONS.map((s) => (
+                      <option key={s} value={s}>
+                        {s}
+                      </option>
+                    ))}
+                  </select>
                 </Field>
               </div>
 

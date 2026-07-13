@@ -11,14 +11,17 @@ export interface UserProfile {
   provider?: string
   school?: string
   role?: string
-  phone?: string
+  /** Australian state/territory (e.g. NSW) — used for curriculum context. */
+  state?: string
   plan?: Plan
   createdAt?: Timestamp
   lastLoginAt?: Timestamp
 }
 
 /** Fields a user is allowed to edit from the Settings page. */
-export type EditableProfile = Pick<UserProfile, 'displayName' | 'school' | 'role' | 'phone'>
+export type EditableProfile = Pick<UserProfile, 'displayName' | 'school' | 'role' | 'state'>
+
+export const STATE_OPTIONS = ['NSW', 'VIC', 'QLD', 'WA', 'SA', 'TAS', 'ACT', 'NT']
 
 /**
  * Subscribes to the user's profile document (users/{uid}) in real time.
