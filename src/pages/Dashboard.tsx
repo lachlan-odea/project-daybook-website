@@ -41,6 +41,7 @@ export default function Dashboard() {
   const today = useMemo(() => todayIndex(), [])
   const dateStr = now.toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'long' })
   const nowHHMM = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`
+  const greeting = now.getHours() < 12 ? 'Good morning' : now.getHours() < 17 ? 'Good afternoon' : 'Good evening'
 
   // Term setup
   const [showTerm, setShowTerm] = useState(false)
@@ -118,7 +119,7 @@ export default function Dashboard() {
         <div>
           <p className="text-sm font-semibold uppercase tracking-wider text-teal-600">{dateStr}</p>
           <h1 className="mt-1 text-2xl font-extrabold tracking-tight text-navy-900 sm:text-3xl">
-            Good day, {firstName} 👋
+            {greeting}, {firstName} 👋
           </h1>
         </div>
         <div className="flex flex-wrap items-center gap-2">
