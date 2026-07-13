@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { useNavigate } from 'react-router-dom'
 import { Search, X, BookOpen, CalendarClock, FileText, Loader2, CornerDownLeft, NotebookPen } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
@@ -193,9 +194,10 @@ export default function GlobalSearch() {
         <Search size={18} />
       </button>
 
-      {open && (
-        <div className="fixed inset-0 z-50 flex items-start justify-center p-4 pt-[10vh]">
-          <div className="absolute inset-0 bg-navy-950/50" onClick={() => setOpen(false)} />
+      {open &&
+        createPortal(
+          <div className="fixed inset-0 z-50 flex items-start justify-center p-4 pt-[10vh]">
+            <div className="absolute inset-0 bg-navy-950/50" onClick={() => setOpen(false)} />
           <div className="relative w-full max-w-xl overflow-hidden rounded-2xl bg-white shadow-card">
             <div className="flex items-center gap-3 border-b border-navy-100 px-4">
               <Search size={18} className="text-navy-400" />
@@ -269,8 +271,9 @@ export default function GlobalSearch() {
               )}
             </div>
           </div>
-        </div>
-      )}
+          </div>,
+          document.body,
+        )}
     </>
   )
 }

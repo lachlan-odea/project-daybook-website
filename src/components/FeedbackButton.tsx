@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { createPortal } from 'react-dom'
 import { useLocation } from 'react-router-dom'
 import { MessageSquare, X, Loader2, Check, Send, AlertCircle } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
@@ -80,9 +81,10 @@ export default function FeedbackButton() {
         <span className="hidden sm:inline">Feedback</span>
       </button>
 
-      {open && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-navy-950/50" onClick={() => !busy && setOpen(false)} />
+      {open &&
+        createPortal(
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <div className="absolute inset-0 bg-navy-950/50" onClick={() => !busy && setOpen(false)} />
           <div className="relative w-full max-w-md rounded-3xl bg-white p-6 shadow-card">
             <button
               onClick={() => setOpen(false)}
@@ -160,9 +162,10 @@ export default function FeedbackButton() {
                 </div>
               </>
             )}
-          </div>
-        </div>
-      )}
+            </div>
+          </div>,
+          document.body,
+        )}
     </>
   )
 }
