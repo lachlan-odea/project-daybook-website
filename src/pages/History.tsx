@@ -86,6 +86,9 @@ function recordHref(dateISO: string, cell?: { subject?: string; className?: stri
   return `/app/record?${q.toString()}`
 }
 
+/** Only numbered teaching periods (1, Period 1, P1, Lesson 1…) are recordable — not roll call, meetings, recess, etc. */
+const isTeachingPeriod = (label: string) => /^(period\s*|p\s*|lesson\s*)?\d+$/i.test((label || '').trim())
+
 const overview = (e: LessonEntry) => e.evidence?.annotations?.trim() || e.note?.trim() || '—'
 const sameClass = (e: LessonEntry, cell: { subject: string; className: string }) => {
   const s = (x?: string) => (x ?? '').trim().toLowerCase()
@@ -149,7 +152,10 @@ export default function History() {
     const wd = (date.getDay() + 6) % 7
     if (wd > 4) return []
     const week = currentWeek(tt, date)
-    return tt.periods.map((p) => tt.cells[cellKey(week, p.id, wd)]).filter((c): c is ClassCell => !!c)
+    return tt.periods
+      .filter((p) => isTeachingPeriod(p.label))
+      .map((p) => tt.cells[cellKey(week, p.id, wd)])
+      .filter((c): c is ClassCell => !!c)
   }
 
   // Evidence-coverage status for a day's pill: green=all classes recorded, yellow=some, red=none.
@@ -177,6 +183,7 @@ export default function History() {
     if (tt && weekday <= 4 && !holiday) {
       const week = currentWeek(tt, date)
       for (const p of tt.periods) {
+        if (!isTeachingPeriod(p.label)) continue
         const cell = tt.cells[cellKey(week, p.id, weekday)]
         if (!cell) continue
         const entry = selectedEntries.find((e) => sameClass(e, cell))
