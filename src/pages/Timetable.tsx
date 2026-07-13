@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Pencil, Plus, Trash2, X, Check, Loader2, RotateCcw, CalendarClock, Clock, Upload } from 'lucide-react'
+import { Pencil, Plus, Trash2, X, Check, Loader2, RotateCcw, CalendarClock, Clock, Upload, CalendarDays } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import TimetableImport from '../components/TimetableImport'
 import {
@@ -17,8 +17,11 @@ import {
   newId,
   saveTimetable,
   subscribeTimetable,
+  termInfo,
+  updateTerms,
   type ClassCell,
   type ClassColor,
+  type TermRange,
   type Timetable,
   type TimeSlot,
   type WeekId,
@@ -44,6 +47,9 @@ export default function Timetable() {
   const [editCell, setEditCell] = useState<{ week: WeekId; periodId: string; day: number } | null>(null)
   const [viewWeek, setViewWeek] = useState<WeekId>('A')
   const [showImport, setShowImport] = useState(false)
+  const [showTerms, setShowTerms] = useState(false)
+  const [termsDraft, setTermsDraft] = useState<TermRange[]>([])
+  const [savingTerms, setSavingTerms] = useState(false)
   const dragSrc = useRef<{ periodId: string; day: number } | null>(null)
   const [dropKey, setDropKey] = useState<string | null>(null)
 
@@ -189,6 +195,23 @@ export default function Timetable() {
     setMsg('Imported — review the timetable below and adjust anything, then Save.')
   }
 
+  const openTerms = () => {
+    const existing = tt?.terms ?? []
+    setTermsDraft(Array.from({ length: 4 }, (_, i) => ({ start: existing[i]?.start ?? '', end: existing[i]?.end ?? '' })))
+    setShowTerms(true)
+  }
+
+  const saveTerms = async () => {
+    if (!user) return
+    setSavingTerms(true)
+    try {
+      await updateTerms(user.uid, termsDraft)
+      setShowTerms(false)
+    } finally {
+      setSavingTerms(false)
+    }
+  }
+
   if (loading || !tt) {
     return (
       <main className="mx-auto max-w-6xl px-5 py-8 sm:px-8">
@@ -212,6 +235,15 @@ export default function Timetable() {
               ? 'Tap a cell to add or edit — or drag a class to move it (drop on another class to swap).'
               : 'Your classes across the week, linked to your programs.'}
           </p>
+          {(() => {
+            const info = termInfo(tt)
+            if (!info.hasCalendar) return null
+            return (
+              <p className="mt-1.5 text-sm font-semibold text-teal-600">
+                {info.isHoliday ? 'Currently on holidays' : `Week ${info.week} · Term ${info.termNumber}`}
+              </p>
+            )
+          })()}
         </div>
         <div className="flex items-center gap-2">
           {editing ? (
@@ -227,9 +259,14 @@ export default function Timetable() {
               </button>
             </>
           ) : (
-            <button onClick={() => setEditing(true)} className="btn-navy text-sm">
-              <Pencil size={16} /> Edit timetable
-            </button>
+            <>
+              <button onClick={openTerms} className="btn-ghost text-sm">
+                <CalendarDays size={16} /> Term dates
+              </button>
+              <button onClick={() => setEditing(true)} className="btn-navy text-sm">
+                <Pencil size={16} /> Edit timetable
+              </button>
+            </>
           )}
         </div>
       </div>
@@ -471,6 +508,66 @@ export default function Timetable() {
       </p>
 
       {showImport && <TimetableImport onClose={() => setShowImport(false)} onImport={applyImport} />}
+
+      {showTerms && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-navy-950/50" onClick={() => !savingTerms && setShowTerms(false)} />
+          <div className="relative w-full max-w-md rounded-3xl bg-white p-6 shadow-card">
+            <button
+              onClick={() => setShowTerms(false)}
+              className="absolute right-4 top-4 flex h-8 w-8 items-center justify-center rounded-full text-navy-400 hover:bg-navy-50"
+              aria-label="Close"
+            >
+              <X size={18} />
+            </button>
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-teal-50 text-teal-600">
+              <CalendarDays size={22} />
+            </div>
+            <h3 className="mt-4 text-lg font-bold text-navy-900">Term dates</h3>
+            <p className="mt-1 text-sm text-navy-500">
+              Enter the start and end of each term so daywise knows the current term, teaching week and holidays.
+            </p>
+
+            <div className="mt-5 space-y-3">
+              <div className="grid grid-cols-[auto_1fr_1fr] items-center gap-2 text-xs font-bold uppercase tracking-wide text-navy-400">
+                <span className="w-14">Term</span>
+                <span>Start</span>
+                <span>End</span>
+              </div>
+              {termsDraft.map((t, i) => (
+                <div key={i} className="grid grid-cols-[auto_1fr_1fr] items-center gap-2">
+                  <span className="w-14 text-sm font-semibold text-navy-700">Term {i + 1}</span>
+                  <input
+                    type="date"
+                    value={t.start}
+                    onChange={(e) =>
+                      setTermsDraft((prev) => prev.map((x, k) => (k === i ? { ...x, start: e.target.value } : x)))
+                    }
+                    className="w-full rounded-lg border border-navy-200 px-2.5 py-1.5 text-sm text-navy-800 outline-none focus:border-teal-400"
+                  />
+                  <input
+                    type="date"
+                    value={t.end}
+                    onChange={(e) =>
+                      setTermsDraft((prev) => prev.map((x, k) => (k === i ? { ...x, end: e.target.value } : x)))
+                    }
+                    className="w-full rounded-lg border border-navy-200 px-2.5 py-1.5 text-sm text-navy-800 outline-none focus:border-teal-400"
+                  />
+                </div>
+              ))}
+            </div>
+
+            <div className="mt-6 flex justify-end gap-3">
+              <button onClick={() => setShowTerms(false)} disabled={savingTerms} className="btn-ghost text-sm">
+                Cancel
+              </button>
+              <button onClick={saveTerms} disabled={savingTerms || !firebaseConfigured} className="btn-primary text-sm">
+                {savingTerms ? <Loader2 size={16} className="animate-spin" /> : <Check size={16} />} Save
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {editCell &&
         (() => {

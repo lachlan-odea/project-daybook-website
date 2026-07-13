@@ -13,10 +13,6 @@ export interface UserProfile {
   role?: string
   phone?: string
   plan?: Plan
-  /** First day of the current term (yyyy-mm-dd) — aligns the teaching diary. */
-  termStart?: string
-  /** Which term (1–4) the current term is. */
-  termNumber?: number
   createdAt?: Timestamp
   lastLoginAt?: Timestamp
 }

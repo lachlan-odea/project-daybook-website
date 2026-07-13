@@ -37,6 +37,12 @@ export interface TimeSlot {
   end: string
 }
 
+/** A term's date range (yyyy-mm-dd). Empty strings mean unset. */
+export interface TermRange {
+  start: string
+  end: string
+}
+
 export interface Timetable {
   periods: Period[]
   /** Keyed by `${week}__${periodId}__${dayIndex}`; week is 'A'|'B', dayIndex 0 (Mon) … 4 (Fri). */
@@ -46,6 +52,8 @@ export interface Timetable {
    * default start/end unless an override exists for that specific week + day.
    */
   timeOverrides?: Record<string, TimeSlot>
+  /** Term start/end dates (index 0 = Term 1 … 3 = Term 4), for term & holiday awareness. */
+  terms?: TermRange[]
   /** Whether the school runs a fortnightly (A/B week) timetable. */
   fortnightly?: boolean
   /** Monday (yyyy-mm-dd) of a reference calendar week, used to work out the current week. */
@@ -74,13 +82,39 @@ export function mondayISO(d: Date): string {
   return `${m.getFullYear()}-${mm}-${dd}`
 }
 
-/** The teaching-week number (1-based) for a date, given the first day of term. Null before term start. */
-export function termWeekNumber(termStartISO: string | undefined, now: Date = new Date()): number | null {
-  if (!termStartISO) return null
-  const [y, m, d] = termStartISO.split('-').map(Number)
+function toISO(d: Date) {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+}
+
+/** Index (0–3) of the term containing `date`, or -1 if none (holiday / no calendar). */
+export function currentTermIndex(tt: Timetable | null, date: Date = new Date()): number {
+  const iso = toISO(date)
+  const terms = tt?.terms ?? []
+  for (let i = 0; i < terms.length; i++) {
+    const t = terms[i]
+    if (t?.start && t?.end && iso >= t.start && iso <= t.end) return i
+  }
+  return -1
+}
+
+export interface TermInfo {
+  hasCalendar: boolean
+  isHoliday: boolean
+  termNumber: number | null
+  week: number | null
+}
+
+/** Resolves the current term, teaching week and holiday status from the term calendar. */
+export function termInfo(tt: Timetable | null, date: Date = new Date()): TermInfo {
+  const terms = tt?.terms ?? []
+  const hasCalendar = terms.some((t) => t?.start && t?.end)
+  if (!hasCalendar) return { hasCalendar: false, isHoliday: false, termNumber: null, week: null }
+  const idx = currentTermIndex(tt, date)
+  if (idx < 0) return { hasCalendar: true, isHoliday: true, termNumber: null, week: null }
+  const [y, m, d] = terms[idx].start.split('-').map(Number)
   const start = mondayOf(new Date(y, (m || 1) - 1, d || 1))
-  const weeks = Math.round((mondayOf(now).getTime() - start.getTime()) / (7 * 86_400_000))
-  return weeks >= 0 ? weeks + 1 : null
+  const weeks = Math.round((mondayOf(date).getTime() - start.getTime()) / (7 * 86_400_000))
+  return { hasCalendar: true, isHoliday: false, termNumber: idx + 1, week: weeks + 1 }
 }
 
 /** Works out whether a given date falls in Week A or Week B, from the anchor. */
@@ -132,7 +166,9 @@ export function migrateTimetable(tt: Timetable): Timetable {
   for (const [k, v] of Object.entries(tt.cells ?? {})) {
     cells[k.split('__').length === 2 ? `A__${k}` : k] = v
   }
-  return { ...tt, cells }
+  // A partial doc (e.g. saved with only `terms`) must still have periods to render.
+  const periods = tt.periods?.length ? tt.periods : defaultTimetable().periods
+  return { ...tt, periods, cells }
 }
 
 /** Generates a stable unique id (used for period rows). */
@@ -180,4 +216,10 @@ export async function getTimetableOnce(uid: string): Promise<Timetable | null> {
 export async function saveTimetable(uid: string, tt: Timetable) {
   if (!db) throw { code: 'unavailable' }
   await setDoc(doc(db, 'users', uid, 'timetable', 'main'), { ...tt, updatedAt: serverTimestamp() })
+}
+
+/** Merges just the term calendar into the timetable doc (doesn't touch periods/cells). */
+export async function updateTerms(uid: string, terms: TermRange[]) {
+  if (!db) throw { code: 'unavailable' }
+  await setDoc(doc(db, 'users', uid, 'timetable', 'main'), { terms, updatedAt: serverTimestamp() }, { merge: true })
 }
