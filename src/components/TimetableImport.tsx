@@ -23,26 +23,48 @@ function kindOf(name: string): SourceKind {
   return 'word'
 }
 
-/* ---------------------- preview of a built timetable -------------------- */
-function ResultPreview({ tt }: { tt: Timetable }) {
+/* ---------------------- editable preview of a built timetable ----------- */
+function ResultPreview({ tt, onChange }: { tt: Timetable; onChange: (tt: Timetable) => void }) {
   const [week, setWeek] = useState<'A' | 'B'>('A')
+  const dragSrc = useRef<{ periodId: string; day: number } | null>(null)
+  const [dropKey, setDropKey] = useState<string | null>(null)
+
+  const move = (from: { periodId: string; day: number }, to: { periodId: string; day: number }) => {
+    if (from.periodId === to.periodId && from.day === to.day) return
+    const cells = { ...tt.cells }
+    const fromKey = cellKey(week, from.periodId, from.day)
+    const toKey = cellKey(week, to.periodId, to.day)
+    const src = cells[fromKey]
+    if (!src) return
+    const dst = cells[toKey]
+    cells[toKey] = src
+    if (dst) cells[fromKey] = dst
+    else delete cells[fromKey]
+    onChange({ ...tt, cells })
+  }
+
   return (
     <div>
-      {tt.fortnightly && (
-        <div className="mb-3 inline-flex rounded-full border border-navy-100 bg-white p-1">
-          {(['A', 'B'] as const).map((w) => (
-            <button
-              key={w}
-              onClick={() => setWeek(w)}
-              className={`rounded-full px-4 py-1.5 text-sm font-bold transition-colors ${
-                week === w ? 'bg-navy-800 text-white' : 'text-navy-600 hover:bg-navy-50'
-              }`}
-            >
-              Week {w}
-            </button>
-          ))}
-        </div>
-      )}
+      <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+        {tt.fortnightly ? (
+          <div className="inline-flex rounded-full border border-navy-100 bg-white p-1">
+            {(['A', 'B'] as const).map((w) => (
+              <button
+                key={w}
+                onClick={() => setWeek(w)}
+                className={`rounded-full px-4 py-1.5 text-sm font-bold transition-colors ${
+                  week === w ? 'bg-navy-800 text-white' : 'text-navy-600 hover:bg-navy-50'
+                }`}
+              >
+                Week {w}
+              </button>
+            ))}
+          </div>
+        ) : (
+          <span />
+        )}
+        <span className="text-xs text-navy-400">Drag a class to fix its slot (drop on another to swap).</span>
+      </div>
       <div className="max-h-72 overflow-auto rounded-xl border border-navy-100">
         <table className="min-w-[640px] border-collapse text-xs">
           <thead>
@@ -73,10 +95,33 @@ function ResultPreview({ tt }: { tt: Timetable }) {
                   const time = effectiveTime(tt, p, week, di)
                   const overridden = time.start !== p.start || time.end !== p.end
                   const color = (cell?.color ?? 'teal') as ClassColor
+                  const key = cellKey(week, p.id, di)
                   return (
-                    <td key={di} className="border-b border-l border-navy-100 p-1 align-top">
+                    <td
+                      key={di}
+                      onDragOver={(e) => {
+                        if (!dragSrc.current) return
+                        e.preventDefault()
+                        setDropKey(key)
+                      }}
+                      onDrop={(e) => {
+                        e.preventDefault()
+                        if (dragSrc.current) move(dragSrc.current, { periodId: p.id, day: di })
+                        dragSrc.current = null
+                        setDropKey(null)
+                      }}
+                      className={`border-b border-l border-navy-100 p-1 align-top ${dropKey === key ? 'bg-teal-50' : ''}`}
+                    >
                       {cell ? (
-                        <div className={`rounded-md border px-1.5 py-1 ${CLASS_COLORS[color].chip}`}>
+                        <div
+                          draggable
+                          onDragStart={() => (dragSrc.current = { periodId: p.id, day: di })}
+                          onDragEnd={() => {
+                            dragSrc.current = null
+                            setDropKey(null)
+                          }}
+                          className={`cursor-move rounded-md border px-1.5 py-1 ${CLASS_COLORS[color].chip}`}
+                        >
                           <p className="font-bold leading-tight">{cell.subject || cell.className}</p>
                           {cell.subject && cell.className && <p className="opacity-80">{cell.className}</p>}
                           {cell.room && <p className="opacity-70">Rm {cell.room}</p>}
@@ -87,7 +132,7 @@ function ResultPreview({ tt }: { tt: Timetable }) {
                           )}
                         </div>
                       ) : (
-                        <div className="min-h-[20px]" />
+                        <div className="min-h-[28px]" />
                       )}
                     </td>
                   )
@@ -393,7 +438,7 @@ export default function TimetableImport({
                   </>
                 )}
               </div>
-              <ResultPreview tt={aiResult} />
+              <ResultPreview tt={aiResult} onChange={setAiResult} />
               <p className="mt-3 text-xs text-navy-400">
                 Check it looks right — you can fine-tune everything after importing. Not quite right?{' '}
                 <button onClick={switchToManual} className="font-semibold text-teal-600 hover:text-teal-700">
