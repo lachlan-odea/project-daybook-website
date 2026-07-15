@@ -26,10 +26,10 @@ import { PLAN_LABELS, type Plan } from '../lib/profile'
 
 const nav = [
   { to: '/app', label: 'Dashboard', icon: LayoutDashboard, end: true },
-  { to: '/app/timetable', label: 'Timetable', icon: CalendarClock },
-  { to: '/app/record', label: 'Record Lesson', icon: Mic },
-  { to: '/app/programs', label: 'Programs', icon: BookOpen },
   { to: '/app/history', label: 'Diary', icon: History },
+  { to: '/app/record', label: 'Record Lesson', icon: Mic },
+  { to: '/app/timetable', label: 'Timetable', icon: CalendarClock },
+  { to: '/app/programs', label: 'Programs', icon: BookOpen },
   { to: '/app/reports', label: 'Data & Reports', icon: BarChart3, soon: true },
 ]
 

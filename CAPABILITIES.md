@@ -152,6 +152,7 @@ the model.
 _Newest first. Each entry corresponds to work pushed to `main`._
 
 ### 2026-07-15
+- Reordered the app nav: Dashboard, Diary, Record Lesson, Timetable, Programs, Data & Reports.
 - Renamed the **History** nav item to **Diary**.
 - Diary: **planning notes** per class on any day (past/upcoming), shared with the dashboard;
   a class's note also shows on its **diary entry page** (above the teaching evidence).
