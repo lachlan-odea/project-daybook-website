@@ -9,20 +9,22 @@ import {
   BarChart3,
   Settings as SettingsIcon,
   LogOut,
-  Bell,
   Menu,
   X,
   Download,
   Crown,
+  Megaphone,
 } from 'lucide-react'
 import { LogoMark, Wordmark } from './Logo'
 import GlobalSearch from './GlobalSearch'
 import FeedbackButton from './FeedbackButton'
+import NotificationsBell from './NotificationsBell'
 import { APP_VERSION } from '../version'
 import { useAuth } from '../context/AuthContext'
 import { useProfile } from '../hooks/useProfile'
 import { usePwaInstall } from '../hooks/usePwaInstall'
 import { PLAN_LABELS, type Plan } from '../lib/profile'
+import { isAdmin } from '../lib/admin'
 
 const nav = [
   { to: '/app', label: 'Dashboard', icon: LayoutDashboard, end: true },
@@ -198,10 +200,7 @@ export default function AppShell() {
               beta {APP_VERSION}
             </span>
             <FeedbackButton />
-            <button className="relative flex h-9 w-9 items-center justify-center rounded-full text-navy-500 hover:bg-navy-50">
-              <Bell size={18} />
-              <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-teal-500" />
-            </button>
+            <NotificationsBell />
             <div className="relative" ref={menuRef}>
               <button
                 onClick={() => setMenuOpen((o) => !o)}
@@ -229,6 +228,14 @@ export default function AppShell() {
                   >
                     <SettingsIcon size={16} /> Settings
                   </Link>
+                  {isAdmin(user) && (
+                    <Link
+                      to="/app/admin"
+                      className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold text-navy-600 hover:bg-navy-50"
+                    >
+                      <Megaphone size={16} /> Send notification
+                    </Link>
+                  )}
                   <button
                     onClick={handleLogout}
                     className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold text-navy-600 hover:bg-navy-50"
