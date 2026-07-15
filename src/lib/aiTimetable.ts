@@ -121,7 +121,8 @@ Rules:
 - Place every class in the correct day and period.
 - Skip empty cells and pure break rows (recess/lunch with no class).
 - All times must be "HH:MM" 24-hour.
-- Never invent classes that are not in the text.`
+- Never invent classes that are not in the text.
+- IMPORTANT: period and time descriptors are ROW/period labels, NOT classes. Never output a class whose subject is just a period/time descriptor such as "am", "Pm", "Roll_Call", "Roll Call", "Recess", "Lunch", a period number ("1", "Period 1", "P1"), or a time range ("9:00 - 9:10"). Some timetables (e.g. Edval/Sentral exports) repeat these descriptors inside the day columns — ignore those repeats. A real class is an actual subject/activity, usually with a subject name plus a class code and/or room.`
 
 async function getModel() {
   if (!app) throw new Error('Firebase is not configured.')
@@ -178,6 +179,19 @@ interface AIResult {
   classes?: AIClass[]
 }
 
+/** True when a "class" is really just a period/time descriptor bleeding in (no code or room). */
+function isDescriptorOnly(subject: string, code: string, room: string): boolean {
+  if (code.trim() || room.trim()) return false // a real class carries a code and/or room
+  const s = subject.trim().toLowerCase()
+  if (!s) return true
+  if (/^(am|pm|recess|lunch|roll[\s_]*call|rollcall|assembly)$/.test(s)) return true
+  if (/^(period\s*)?\d{1,2}$/.test(s)) return true // "1", "Period 1"
+  if (/^p\s*\d{1,2}$/.test(s)) return true // "P1"
+  if (/^l\s*\d{1,2}$/.test(s)) return true // "L1", "L2"
+  if (/^\d{1,2}[:.]\d{2}/.test(s)) return true // starts with a time range
+  return false
+}
+
 function toTimetable(ai: AIResult): Timetable {
   const periods: Period[] = (ai.periods ?? []).map((p) => ({
     id: newId(),
@@ -195,10 +209,12 @@ function toTimetable(ai: AIResult): Timetable {
     if (!period || day < 0 || day > 4) continue
     const subject = (c.subject ?? '').trim()
     const code = (c.code ?? '').trim()
+    const room = (c.room ?? '').trim()
     if (!subject && !code) continue
+    if (isDescriptorOnly(subject, code, room)) continue
     const week = c.week === 'B' ? 'B' : 'A'
     const key = cellKey(week, period.id, day)
-    cells[key] = { subject, className: code, room: (c.room ?? '').trim() || undefined, color: 'teal' }
+    cells[key] = { subject, className: code, room: room || undefined, color: 'teal' }
     if (c.startOverride || c.endOverride) {
       timeOverrides[key] = { start: (c.startOverride || period.start).trim(), end: (c.endOverride || period.end).trim() }
     }
