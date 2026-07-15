@@ -1,12 +1,32 @@
+import { execSync } from 'node:child_process'
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
 
 const BASE = '/daywise/'
 
+// Beta build version, derived automatically from git at build time:
+//   YYYY.MM.DD.NNN — the date of the HEAD commit, then a per-day build number
+//   (the count of commits made on that date), starting at 001 each day.
+// Requires full git history at build time (workflow uses fetch-depth: 0).
+function buildVersion(): string {
+  try {
+    const date = execSync('git log -1 --date=short --format=%cd').toString().trim()
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return 'dev'
+    const dates = execSync('git log --date=short --format=%cd').toString().trim().split('\n')
+    const n = dates.filter((d) => d === date).length
+    return `${date.replace(/-/g, '.')}.${String(n).padStart(3, '0')}`
+  } catch {
+    return 'dev'
+  }
+}
+
 // Served from https://lachlan-odea.github.io/daywise/
 export default defineConfig({
   base: BASE,
+  define: {
+    __APP_VERSION__: JSON.stringify(buildVersion()),
+  },
   plugins: [
     react(),
     VitePWA({

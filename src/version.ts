@@ -1,7 +1,7 @@
 /**
  * Beta build version, shown in the app header.
- * Format: YYYY.MM.DD.NNN — date of the push, then a build number for that day
- * starting at 001 (reset to 001 on a new day, incremented on each same-day push).
- * Bump this on every push during the closed beta.
+ * Format: YYYY.MM.DD.NNN — the date of the HEAD commit, then a per-day build
+ * number (count of commits that day), starting at 001 each day.
+ * Computed automatically at build time from git — see buildVersion() in vite.config.ts.
  */
-export const APP_VERSION = '2026.07.15.001'
+export const APP_VERSION = __APP_VERSION__
