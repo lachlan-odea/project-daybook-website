@@ -18,6 +18,7 @@ import {
 import { LogoMark, Wordmark } from './Logo'
 import GlobalSearch from './GlobalSearch'
 import FeedbackButton from './FeedbackButton'
+import { APP_VERSION } from '../version'
 import { useAuth } from '../context/AuthContext'
 import { useProfile } from '../hooks/useProfile'
 import { usePwaInstall } from '../hooks/usePwaInstall'
@@ -190,6 +191,12 @@ export default function AppShell() {
           </div>
 
           <div className="flex items-center gap-2">
+            <span
+              className="hidden items-center gap-1 rounded-full bg-navy-50 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-navy-400 sm:inline-flex"
+              title={`daywise beta build ${APP_VERSION}`}
+            >
+              beta {APP_VERSION}
+            </span>
             <FeedbackButton />
             <button className="relative flex h-9 w-9 items-center justify-center rounded-full text-navy-500 hover:bg-navy-50">
               <Bell size={18} />

@@ -10,8 +10,10 @@ This document is the single source of truth for what daywise can do. It has two 
    public update/release notes once we reach **v0.1**.
 
 > **Maintenance rule (beta):** every change pushed to git must be reflected here — update the
-> relevant capability bullet(s) **and** add a dated entry to the Changelog. Keep tracking
-> everything until we cut **v0.1**, at which point this becomes formal release-notes input.
+> relevant capability bullet(s) **and** add a dated entry to the Changelog, **and bump the beta
+> build version** in `src/version.ts` (`YYYY.MM.DD.NNN` — today's date + a per-day build number
+> starting at 001). Keep tracking everything until we cut **v0.1**, at which point this becomes
+> formal release-notes input.
 
 ---
 
@@ -144,6 +146,7 @@ the model.
 _Newest first. Each entry corresponds to work pushed to `main`._
 
 ### 2026-07-15
+- Added a **beta build version badge** in the header (`YYYY.MM.DD.NNN`), starting at `2026.07.15.001`.
 - Record Lesson: student names **anonymised** in generated evidence (first name + surname initial).
 - PDF timetable import now uses **hybrid image + text** extraction (page image for layout +
   extracted text for exact wording) for better accuracy; Word/Excel remain text-only.
