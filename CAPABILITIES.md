@@ -99,7 +99,11 @@ the model.
 - Can pre-fill subject/class/date when launched from the History day view.
 - Saves to the searchable diary (`users/{uid}/entries`).
 
-### 7. History (teaching diary)
+### 7. Diary (teaching diary)
+- Navigation label is **Diary** (route `/app/history`).
+- **Planning notes** per class on any day (past or upcoming) — add/edit inline from the day view;
+  shared with the dashboard's notes (same `users/{uid}/planning/{date}` store). A class's note also
+  appears on its **diary entry page**, under "What you recorded" and above the teaching evidence.
 - **Calendar** view with an evidence-coverage status pill per teaching day:
   green = all classes recorded, yellow = some, red = none. Holiday days are greyed with no pill.
 - Click a day to see **that day's timetable** (correct A/B week; numbered teaching periods only —
@@ -148,6 +152,9 @@ the model.
 _Newest first. Each entry corresponds to work pushed to `main`._
 
 ### 2026-07-15
+- Renamed the **History** nav item to **Diary**.
+- Diary: **planning notes** per class on any day (past/upcoming), shared with the dashboard;
+  a class's note also shows on its **diary entry page** (above the teaching evidence).
 - Dashboard: **planning notes** per class on today's timetable (add/edit inline, saved per day).
 - Timetable import: user-facing copy now says **Curriculum Intelligence** instead of "AI".
 - Beta build version is now **derived automatically** from git at build time (HEAD commit date +

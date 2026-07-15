@@ -1,9 +1,11 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
-import { ArrowLeft, Loader2, Trash2, Mic, Sparkles, ExternalLink } from 'lucide-react'
+import { ArrowLeft, Loader2, Trash2, Mic, Sparkles, ExternalLink, NotebookPen } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { useConfirm } from '../components/ConfirmProvider'
 import { getEntry, deleteEntry, type LessonEntry } from '../lib/entries'
+import { subscribeTimetable, currentWeek, cellKey, type Timetable } from '../lib/timetable'
+import { subscribePlanningDay, type PlanningNotes } from '../lib/planning'
 
 function formatDate(iso: string) {
   const [y, m, d] = iso.split('-').map(Number)
@@ -14,6 +16,12 @@ function formatDate(iso: string) {
     month: 'long',
     year: 'numeric',
   })
+}
+
+const isTeachingPeriod = (label: string) => /^(period\s*|p\s*|lesson\s*)?\d+$/i.test((label || '').trim())
+const sameClass = (e: LessonEntry, cell: { subject?: string; className?: string }) => {
+  const s = (x?: string) => (x ?? '').trim().toLowerCase()
+  return (!!s(e.subject) && s(e.subject) === s(cell.subject)) || (!!s(e.className) && s(e.className) === s(cell.className))
 }
 
 function Section({ label, text }: { label: string; text: string }) {
@@ -33,6 +41,8 @@ export default function EntryDetail() {
   const confirm = useConfirm()
   const [entry, setEntry] = useState<LessonEntry | null>(null)
   const [state, setState] = useState<'loading' | 'ready' | 'missing'>('loading')
+  const [tt, setTt] = useState<Timetable | null>(null)
+  const [planning, setPlanning] = useState<PlanningNotes>({})
 
   useEffect(() => {
     if (!user || !id) return
@@ -51,6 +61,33 @@ export default function EntryDetail() {
       active = false
     }
   }, [user, id])
+
+  useEffect(() => {
+    if (!user) return
+    return subscribeTimetable(user.uid, setTt)
+  }, [user])
+
+  useEffect(() => {
+    if (!user || !entry?.date) return
+    return subscribePlanningDay(user.uid, entry.date, setPlanning)
+  }, [user, entry?.date])
+
+  // Match this entry to its timetabled period on that date to surface its planning note.
+  const planningNote = useMemo(() => {
+    if (!tt || !entry) return ''
+    const [y, m, d] = entry.date.split('-').map(Number)
+    if (!y) return ''
+    const date = new Date(y, (m || 1) - 1, d || 1)
+    const weekday = (date.getDay() + 6) % 7
+    if (weekday > 4) return ''
+    const week = currentWeek(tt, date)
+    for (const p of tt.periods) {
+      if (!isTeachingPeriod(p.label)) continue
+      const cell = tt.cells[cellKey(week, p.id, weekday)]
+      if (cell && sameClass(entry, cell)) return planning[p.id] ?? ''
+    }
+    return ''
+  }, [tt, entry, planning])
 
   const remove = async () => {
     if (!user || !id) return
@@ -134,6 +171,16 @@ export default function EntryDetail() {
         </p>
         <p className="whitespace-pre-wrap text-sm leading-relaxed text-navy-700">{entry.note || '—'}</p>
       </div>
+
+      {/* planning note (managed on the diary/dashboard for this class + day) */}
+      {planningNote && (
+        <div className="mt-4 rounded-2xl border border-amber-200 bg-amber-50/60 p-5">
+          <p className="mb-1.5 flex items-center gap-1.5 text-xs font-bold uppercase tracking-wide text-amber-700">
+            <NotebookPen size={12} /> Planning note
+          </p>
+          <p className="whitespace-pre-wrap text-sm leading-relaxed text-navy-700">{planningNote}</p>
+        </div>
+      )}
 
       {/* evidence */}
       {hasEvidence ? (

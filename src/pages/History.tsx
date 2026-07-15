@@ -9,10 +9,12 @@ import {
   ChevronLeft,
   ChevronRight,
   CalendarClock,
+  NotebookPen,
 } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { useConfirm } from '../components/ConfirmProvider'
 import { subscribeEntries, deleteEntry, type LessonEntry } from '../lib/entries'
+import { subscribePlanningDay, savePlanningNote, type PlanningNotes } from '../lib/planning'
 import {
   subscribeTimetable,
   cellKey,
@@ -104,6 +106,10 @@ export default function History() {
   const [entries, setEntries] = useState<LessonEntry[] | null>(null)
   const [tt, setTt] = useState<Timetable | null>(null)
   const [deletingId, setDeletingId] = useState<string | null>(null)
+  const [planning, setPlanning] = useState<PlanningNotes>({})
+  const [editingNote, setEditingNote] = useState<string | null>(null)
+  const [draft, setDraft] = useState('')
+  const [savingNote, setSavingNote] = useState(false)
 
   const today = useMemo(() => new Date(), [])
   const [view, setView] = useState({ year: today.getFullYear(), month: today.getMonth() })
@@ -119,6 +125,33 @@ export default function History() {
     if (!user) return
     return subscribeTimetable(user.uid, setTt)
   }, [user])
+
+  // Planning notes for the selected day (shared with the dashboard's notes).
+  useEffect(() => {
+    if (!user) return
+    setEditingNote(null)
+    return subscribePlanningDay(user.uid, selected, setPlanning)
+  }, [user, selected])
+
+  const startEditNote = (periodId: string) => {
+    setEditingNote(periodId)
+    setDraft(planning[periodId] ?? '')
+  }
+  const cancelNote = () => {
+    setEditingNote(null)
+    setDraft('')
+  }
+  const saveNote = async (periodId: string) => {
+    if (!user) return
+    setSavingNote(true)
+    try {
+      await savePlanningNote(user.uid, selected, periodId, draft)
+      setEditingNote(null)
+      setDraft('')
+    } finally {
+      setSavingNote(false)
+    }
+  }
 
   // On first load, jump to the most recent entry.
   useEffect(() => {
@@ -178,7 +211,7 @@ export default function History() {
     const weekday = (date.getDay() + 6) % 7 // 0=Mon … 6=Sun
     const holiday = termsSet && currentTermIndex(tt, date) < 0
     const used = new Set<string>()
-    const rows: { periodLabel: string; time: string; cell: { subject: string; className: string; room?: string; color?: ClassColor }; entry?: LessonEntry }[] = []
+    const rows: { periodId: string; periodLabel: string; time: string; cell: { subject: string; className: string; room?: string; color?: ClassColor }; entry?: LessonEntry }[] = []
     // No timetable on weekends or during the holidays.
     if (tt && weekday <= 4 && !holiday) {
       const week = currentWeek(tt, date)
@@ -189,7 +222,7 @@ export default function History() {
         const entry = selectedEntries.find((e) => sameClass(e, cell))
         if (entry?.id) used.add(entry.id)
         const t = effectiveTime(tt, p, week, weekday)
-        rows.push({ periodLabel: p.label, time: t.start ? `${t.start}` : '', cell, entry })
+        rows.push({ periodId: p.id, periodLabel: p.label, time: t.start ? `${t.start}` : '', cell, entry })
       }
     }
     const others = selectedEntries.filter((e) => !e.id || !used.has(e.id))
@@ -265,7 +298,7 @@ export default function History() {
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <p className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wider text-teal-600">
-            <HistoryIcon size={15} /> History
+            <HistoryIcon size={15} /> Diary
           </p>
           <h1 className="mt-1 text-2xl font-extrabold tracking-tight text-navy-900 sm:text-3xl">Teaching diary</h1>
           <p className="mt-1 text-navy-500">Pick a day to see its lessons and evidence.</p>
@@ -391,6 +424,8 @@ export default function History() {
                   <div className="space-y-2">
                     {dayView.rows.map((r, i) => {
                       const color = (r.cell.color ?? 'teal') as ClassColor
+                      const note = planning[r.periodId] ?? ''
+                      const isEditing = editingNote === r.periodId
                       return (
                         <div
                           key={i}
@@ -415,22 +450,76 @@ export default function History() {
                                 <p className="mt-1.5 text-sm text-navy-400">No lesson recorded.</p>
                               )}
                             </div>
-                            {r.entry ? (
-                              <Link
-                                to={`/app/history/${r.entry.id}`}
-                                className="flex h-8 shrink-0 items-center gap-1 rounded-full bg-navy-800 px-3 text-xs font-semibold text-white hover:bg-navy-900"
+                            <div className="flex shrink-0 flex-col items-end gap-2">
+                              {r.entry ? (
+                                <Link
+                                  to={`/app/history/${r.entry.id}`}
+                                  className="flex h-8 items-center gap-1 rounded-full bg-navy-800 px-3 text-xs font-semibold text-white hover:bg-navy-900"
+                                >
+                                  View <ChevronRight size={13} />
+                                </Link>
+                              ) : (
+                                <Link
+                                  to={recordHref(selected, r.cell)}
+                                  className="flex h-8 items-center rounded-full bg-teal-500 px-3 text-xs font-semibold text-white hover:bg-teal-600"
+                                >
+                                  Record
+                                </Link>
+                              )}
+                              <button
+                                onClick={() => (isEditing ? cancelNote() : startEditNote(r.periodId))}
+                                className={`flex h-7 items-center gap-1 rounded-full px-2.5 text-[11px] font-bold transition-colors ${
+                                  note
+                                    ? 'bg-amber-100 text-amber-700 hover:bg-amber-200'
+                                    : 'text-navy-400 hover:bg-navy-100'
+                                }`}
+                                title={note ? 'Edit planning note' : 'Add planning note'}
                               >
-                                View <ChevronRight size={13} />
-                              </Link>
-                            ) : (
-                              <Link
-                                to={recordHref(selected, r.cell)}
-                                className="shrink-0 text-xs font-semibold text-teal-600 hover:text-teal-700"
-                              >
-                                Record
-                              </Link>
-                            )}
+                                <NotebookPen size={12} /> {note ? 'Note' : 'Plan'}
+                              </button>
+                            </div>
                           </div>
+
+                          {isEditing ? (
+                            <div className="mt-3">
+                              <textarea
+                                autoFocus
+                                value={draft}
+                                onChange={(e) => setDraft(e.target.value)}
+                                rows={3}
+                                placeholder="Planning notes for this lesson…"
+                                className="w-full rounded-lg border border-navy-200 bg-white p-2.5 text-sm text-navy-800 placeholder:text-navy-300 focus:border-teal-400 focus:outline-none focus:ring-2 focus:ring-teal-100"
+                              />
+                              <div className="mt-2 flex items-center justify-end gap-2">
+                                <button
+                                  onClick={cancelNote}
+                                  className="rounded-lg px-3 py-1.5 text-xs font-semibold text-navy-500 hover:bg-navy-100"
+                                >
+                                  Cancel
+                                </button>
+                                <button
+                                  onClick={() => saveNote(r.periodId)}
+                                  disabled={savingNote}
+                                  className="rounded-lg bg-teal-500 px-3 py-1.5 text-xs font-bold text-white hover:bg-teal-600 disabled:opacity-60"
+                                >
+                                  {savingNote ? 'Saving…' : 'Save note'}
+                                </button>
+                              </div>
+                            </div>
+                          ) : (
+                            note && (
+                              <button
+                                onClick={() => startEditNote(r.periodId)}
+                                className="mt-3 block w-full text-left"
+                                title="Edit planning note"
+                              >
+                                <span className="flex gap-1.5 rounded-lg bg-amber-50 px-3 py-2 text-sm text-navy-600 whitespace-pre-wrap">
+                                  <NotebookPen size={13} className="mt-0.5 shrink-0 text-amber-500" />
+                                  {note}
+                                </span>
+                              </button>
+                            )
+                          )}
                         </div>
                       )
                     })}
