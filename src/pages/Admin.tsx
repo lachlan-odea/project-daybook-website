@@ -31,8 +31,18 @@ import {
 import { getUsageStats, type UsageStats } from '../lib/adminStats'
 import { PLAN_LABELS, type Plan } from '../lib/profile'
 
+const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+// Compact, comma-free date so it never wraps in a narrow column (e.g. "3 Jul 26").
 const fmtDate = (d: Date | null) =>
-  d ? d.toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: '2-digit' }) : '—'
+  d ? `${d.getDate()} ${MONTHS[d.getMonth()]} ${String(d.getFullYear()).slice(-2)}` : '—'
+
+// Short plan labels for the table badge; full label shown on hover.
+const SHORT_PLAN: Record<Plan, string> = {
+  starter: 'Starter',
+  pro: 'Pro',
+  school: 'School',
+  perpetual: 'Founding',
+}
 
 const TYPES: { value: AnnouncementType; label: string }[] = [
   { value: 'update', label: 'Product update' },
@@ -330,20 +340,27 @@ export default function Admin() {
                             <p className="text-xs text-navy-400">{u.email || u.uid}</p>
                           </td>
                           <td>
-                            <span className="inline-block whitespace-nowrap rounded-full bg-navy-50 px-2.5 py-1 text-[11px] font-bold text-navy-600">
-                              {u.plan ? PLAN_LABELS[u.plan as Plan] ?? u.plan : 'Starter'}
+                            <span
+                              className={`inline-block whitespace-nowrap rounded-full px-2.5 py-1 text-[11px] font-bold ${
+                                u.plan === 'perpetual' ? 'bg-amber-50 text-amber-700' : 'bg-navy-50 text-navy-600'
+                              }`}
+                              title={u.plan ? PLAN_LABELS[u.plan as Plan] ?? u.plan : 'Starter'}
+                            >
+                              {u.plan ? SHORT_PLAN[u.plan as Plan] ?? u.plan : 'Starter'}
                             </span>
                           </td>
                           <td className="text-navy-600">
                             {u.school || u.state ? (
-                              <span className="flex items-center gap-1.5">
-                                <span>{u.school || '—'}</span>
+                              <div className="flex items-center gap-1.5">
+                                <span className="max-w-[150px] truncate" title={u.school || ''}>
+                                  {u.school || '—'}
+                                </span>
                                 {u.state && (
-                                  <span className="rounded bg-sky-50 px-1.5 py-0.5 text-[10px] font-bold text-sky-700">
+                                  <span className="shrink-0 rounded bg-sky-50 px-1.5 py-0.5 text-[10px] font-bold text-sky-700">
                                     {u.state}
                                   </span>
                                 )}
-                              </span>
+                              </div>
                             ) : (
                               <span className="text-navy-300">—</span>
                             )}
