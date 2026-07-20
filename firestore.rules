@@ -5,16 +5,20 @@ rules_version = '2';
 // including all subcollections (timetable, and future entries/programs/reports).
 service cloud.firestore {
   match /databases/{database}/documents {
-    match /users/{userId}/{document=**} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
-    }
-
-    // Broadcast announcements: any signed-in user can read; only admins can write.
+    // Admins may read any user's data (for the admin usage dashboard); users still
+    // only write their own tree.
     // Keep this admin list in sync with ADMIN_EMAILS in src/lib/admin.ts.
     function isAdmin() {
       return request.auth != null
         && request.auth.token.email in ['lachlan.odea@outlook.com', 'admin@projectdaybook.com'];
     }
+
+    match /users/{userId}/{document=**} {
+      allow read: if request.auth != null && (request.auth.uid == userId || isAdmin());
+      allow write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // Broadcast announcements: any signed-in user can read; only admins can write.
     match /announcements/{id} {
       allow read: if request.auth != null;
       allow write: if isAdmin();
