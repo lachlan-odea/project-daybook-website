@@ -302,59 +302,69 @@ export default function Admin() {
 
               {/* Per-user table */}
               <div className="mt-6 overflow-x-auto rounded-2xl border border-navy-100 bg-white">
-                <table className="w-full min-w-[860px] text-left text-sm">
+                <table className="w-full min-w-[880px] border-collapse text-left text-sm [&_td]:px-4 [&_td]:py-3.5 [&_td]:align-middle [&_th]:px-4 [&_th]:py-3">
                   <thead>
-                    <tr className="border-b border-navy-100 text-xs font-bold uppercase tracking-wide text-navy-400">
-                      <th className="px-4 py-3">User</th>
-                      <th className="px-4 py-3">Plan</th>
-                      <th className="px-4 py-3">School / State</th>
-                      <th className="px-4 py-3">Joined</th>
-                      <th className="px-4 py-3">Last active</th>
-                      <th className="px-4 py-3 text-center">Program</th>
-                      <th className="px-4 py-3 text-center">Timetable</th>
-                      <th className="px-4 py-3 text-right">Lessons</th>
+                    <tr className="border-b border-navy-100 bg-cloud/40 text-[11px] font-bold uppercase tracking-wide text-navy-400">
+                      <th className="text-left">User</th>
+                      <th className="text-left">Plan</th>
+                      <th className="text-left">School / State</th>
+                      <th className="whitespace-nowrap text-left">Joined</th>
+                      <th className="whitespace-nowrap text-left">Last active</th>
+                      <th className="text-center">Program</th>
+                      <th className="text-center">Timetable</th>
+                      <th className="text-right">Lessons</th>
                     </tr>
                   </thead>
                   <tbody>
                     {usage.users.length === 0 ? (
                       <tr>
-                        <td colSpan={8} className="px-4 py-8 text-center text-navy-400">
+                        <td colSpan={8} className="text-center text-navy-400">
                           No users yet.
                         </td>
                       </tr>
                     ) : (
                       usage.users.map((u) => (
-                        <tr key={u.uid} className="border-b border-navy-50 last:border-0">
-                          <td className="px-4 py-3">
+                        <tr key={u.uid} className="border-b border-navy-50 last:border-0 hover:bg-navy-50/40">
+                          <td>
                             <p className="font-semibold text-navy-900">{u.displayName || '—'}</p>
                             <p className="text-xs text-navy-400">{u.email || u.uid}</p>
                           </td>
-                          <td className="px-4 py-3">
-                            <span className="rounded-md bg-navy-50 px-2 py-0.5 text-[11px] font-bold text-navy-600">
+                          <td>
+                            <span className="inline-block whitespace-nowrap rounded-full bg-navy-50 px-2.5 py-1 text-[11px] font-bold text-navy-600">
                               {u.plan ? PLAN_LABELS[u.plan as Plan] ?? u.plan : 'Starter'}
                             </span>
                           </td>
-                          <td className="px-4 py-3 text-navy-600">
-                            {u.school || '—'}
-                            {u.state && <span className="ml-1 text-xs font-semibold text-navy-400">{u.state}</span>}
+                          <td className="text-navy-600">
+                            {u.school || u.state ? (
+                              <span className="flex items-center gap-1.5">
+                                <span>{u.school || '—'}</span>
+                                {u.state && (
+                                  <span className="rounded bg-sky-50 px-1.5 py-0.5 text-[10px] font-bold text-sky-700">
+                                    {u.state}
+                                  </span>
+                                )}
+                              </span>
+                            ) : (
+                              <span className="text-navy-300">—</span>
+                            )}
                           </td>
-                          <td className="px-4 py-3 text-navy-500">{fmtDate(u.createdAt)}</td>
-                          <td className="px-4 py-3 text-navy-500">{fmtDate(u.lastLoginAt)}</td>
-                          <td className="px-4 py-3 text-center">
+                          <td className="whitespace-nowrap text-navy-500">{fmtDate(u.createdAt)}</td>
+                          <td className="whitespace-nowrap text-navy-500">{fmtDate(u.lastLoginAt)}</td>
+                          <td className="text-center">
                             {u.hasProgram ? (
                               <Check size={16} className="mx-auto text-teal-600" strokeWidth={3} />
                             ) : (
                               <Minus size={16} className="mx-auto text-navy-200" />
                             )}
                           </td>
-                          <td className="px-4 py-3 text-center">
+                          <td className="text-center">
                             {u.hasTimetable ? (
                               <Check size={16} className="mx-auto text-teal-600" strokeWidth={3} />
                             ) : (
                               <Minus size={16} className="mx-auto text-navy-200" />
                             )}
                           </td>
-                          <td className="px-4 py-3 text-right font-bold text-navy-900">{u.lessonCount}</td>
+                          <td className="text-right font-bold text-navy-900">{u.lessonCount}</td>
                         </tr>
                       ))
                     )}

@@ -274,7 +274,7 @@ export default function Dashboard() {
                           }`}
                           title={note ? 'Edit planning note' : 'Add planning note'}
                         >
-                          <NotebookPen size={12} /> {note ? 'Note' : 'Plan'}
+                          <NotebookPen size={12} /> Notes
                         </button>
                         {isTeachingPeriod(p.label) &&
                           !!time.start &&
