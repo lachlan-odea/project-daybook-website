@@ -214,8 +214,9 @@
       .fbadge .fi { width: 30px; height: 30px; border-radius: 9px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
       .fbadge .ft { display: block; font-size: 12px; font-weight: 800; color: #132145; line-height: 1.15; }
       .fbadge .fs { display: block; font-size: 11px; color: #8894b0; margin-top: 2px; }
-      .fbadge.f1 { top: 58px; left: -20px; } .fbadge.f1 .fi { background: #eafaf5; color: #0d9488; }
-      .fbadge.f2 { bottom: 30px; right: -20px; } .fbadge.f2 .fi { background: #eef2fb; color: #3654a8; }
+      .fbadge.f1 { top: 58px; left: -20px; animation: floaty 5s ease-in-out infinite; } .fbadge.f1 .fi { background: #eafaf5; color: #0d9488; }
+      .fbadge.f2 { bottom: 30px; right: -20px; animation: floaty 6.5s ease-in-out -2s infinite; } .fbadge.f2 .fi { background: #eef2fb; color: #3654a8; }
+      @keyframes floaty { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-9px); } }
       @media (max-width: 600px) { .fbadge { display: none; } .appcards { grid-template-columns: 1fr; } }
 
       @media (prefers-reduced-motion: reduce) { * { animation: none !important; } .logo, .pill, h1, .sub, form, .chips, .showcase { opacity: 1; } }
