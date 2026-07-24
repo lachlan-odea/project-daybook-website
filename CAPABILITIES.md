@@ -116,6 +116,8 @@ the model.
   Non-timetabled entries are listed separately.
 - Overview text shows the **Program Annotation** (falls back to the raw note).
 - Entry detail: the note plus full evidence; the matched lesson deep-links into its program.
+- **Editable entries** — an entry can be edited after saving (date, subject/class/room, the note,
+  outcomes, and all evidence fields).
 
 ### 8. Global search
 - ⌘K / Ctrl+K command palette across **programs, lessons, timetable classes, and diary entries**;
@@ -172,6 +174,8 @@ the model.
 _Newest first. Each entry corresponds to work pushed to `main`._
 
 ### 2026-07-22
+- Diary entries are now **editable** after saving (note, class details, outcomes, evidence).
+- Coming-soon page: added the app dashboard mockup with floating badges (app.daywise.au).
 - Record Lesson now matches against the **program(s) a class follows** (class → program link set
   at record time), instead of any program sharing the subject — fixes outcomes/lessons bleeding
   across classes. Outcomes are also constrained to the matched lesson.

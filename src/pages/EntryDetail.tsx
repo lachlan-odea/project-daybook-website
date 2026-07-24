@@ -1,11 +1,69 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
-import { ArrowLeft, Loader2, Trash2, Mic, Sparkles, ExternalLink, NotebookPen } from 'lucide-react'
+import { ArrowLeft, Loader2, Trash2, Mic, Sparkles, ExternalLink, NotebookPen, Pencil, Check, X, Plus } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { useConfirm } from '../components/ConfirmProvider'
-import { getEntry, deleteEntry, type LessonEntry } from '../lib/entries'
+import { getEntry, deleteEntry, updateEntry, type LessonEntry, type Evidence } from '../lib/entries'
 import { subscribeTimetable, currentWeek, cellKey, type Timetable } from '../lib/timetable'
 import { subscribePlanningDay, type PlanningNotes } from '../lib/planning'
+
+const inputCls =
+  'w-full rounded-xl border border-navy-200 bg-white px-4 py-2.5 text-navy-900 outline-none transition-colors placeholder:text-navy-300 focus:border-teal-400 focus:ring-4 focus:ring-teal-100'
+
+interface Draft {
+  date: string
+  subject: string
+  className: string
+  room: string
+  note: string
+  outcomes: string[]
+  evidence: Evidence
+}
+
+function EditTextArea({ label, value, onChange, rows = 3 }: { label: string; value: string; onChange: (v: string) => void; rows?: number }) {
+  return (
+    <label className="block">
+      <span className="mb-1.5 block text-xs font-bold uppercase tracking-wide text-navy-400">{label}</span>
+      <textarea value={value} onChange={(e) => onChange(e.target.value)} rows={rows} className={inputCls + ' resize-y'} />
+    </label>
+  )
+}
+
+function ListEditor({ label, items, onChange, placeholder }: { label: string; items: string[]; onChange: (v: string[]) => void; placeholder: string }) {
+  return (
+    <div>
+      <p className="mb-1.5 text-xs font-bold uppercase tracking-wide text-navy-400">{label}</p>
+      <div className="space-y-1.5">
+        {items.map((it, j) => (
+          <div key={j} className="flex items-center gap-1.5">
+            <input
+              value={it}
+              onChange={(e) => {
+                const next = [...items]
+                next[j] = e.target.value
+                onChange(next)
+              }}
+              className="w-full rounded-lg border border-navy-200 bg-white px-3 py-1.5 text-sm text-navy-800 outline-none focus:border-teal-400"
+            />
+            <button
+              onClick={() => onChange(items.filter((_, k) => k !== j))}
+              className="shrink-0 rounded-lg p-1.5 text-navy-300 hover:bg-red-50 hover:text-red-500"
+              aria-label="Remove"
+            >
+              <X size={14} />
+            </button>
+          </div>
+        ))}
+        <button
+          onClick={() => onChange([...items, ''])}
+          className="flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-semibold text-teal-600 hover:bg-teal-50"
+        >
+          <Plus size={13} /> Add {placeholder}
+        </button>
+      </div>
+    </div>
+  )
+}
 
 function formatDate(iso: string) {
   const [y, m, d] = iso.split('-').map(Number)
@@ -49,6 +107,9 @@ export default function EntryDetail() {
   const [state, setState] = useState<'loading' | 'ready' | 'missing'>('loading')
   const [tt, setTt] = useState<Timetable | null>(null)
   const [planning, setPlanning] = useState<PlanningNotes>({})
+  const [editing, setEditing] = useState(false)
+  const [saving, setSaving] = useState(false)
+  const [draft, setDraft] = useState<Draft | null>(null)
 
   useEffect(() => {
     if (!user || !id) return
@@ -94,6 +155,60 @@ export default function EntryDetail() {
     }
     return ''
   }, [tt, entry, planning])
+
+  const startEdit = () => {
+    if (!entry) return
+    const e = entry.evidence
+    setDraft({
+      date: entry.date,
+      subject: entry.subject ?? '',
+      className: entry.className ?? '',
+      room: entry.room ?? '',
+      note: entry.note ?? '',
+      outcomes: entry.outcomes ?? [],
+      evidence: {
+        annotations: e?.annotations ?? '',
+        assessmentEvidence: e?.assessmentEvidence ?? '',
+        differentiation: e?.differentiation ?? '',
+        reflection: e?.reflection ?? '',
+        nextSteps: e?.nextSteps ?? [],
+      },
+    })
+    setEditing(true)
+  }
+
+  const cancelEdit = () => {
+    setEditing(false)
+    setDraft(null)
+  }
+
+  const saveEdit = async () => {
+    if (!user || !id || !entry || !draft) return
+    setSaving(true)
+    try {
+      const patch = {
+        date: draft.date,
+        subject: draft.subject.trim(),
+        className: draft.className.trim(),
+        room: draft.room.trim() || undefined,
+        note: draft.note.trim(),
+        outcomes: draft.outcomes.map((s) => s.trim()).filter(Boolean),
+        evidence: {
+          annotations: draft.evidence.annotations.trim(),
+          assessmentEvidence: draft.evidence.assessmentEvidence.trim(),
+          differentiation: draft.evidence.differentiation.trim(),
+          reflection: draft.evidence.reflection.trim(),
+          nextSteps: draft.evidence.nextSteps.map((s) => s.trim()).filter(Boolean),
+        },
+      }
+      await updateEntry(user.uid, id, patch)
+      setEntry({ ...entry, ...patch })
+      setEditing(false)
+      setDraft(null)
+    } finally {
+      setSaving(false)
+    }
+  }
 
   const remove = async () => {
     if (!user || !id) return
@@ -162,14 +277,66 @@ export default function EntryDetail() {
             </p>
           )}
         </div>
-        <button
-          onClick={remove}
-          className="btn border border-red-200 bg-red-50 px-4 py-2.5 text-sm font-semibold text-red-600 hover:bg-red-100"
-        >
-          <Trash2 size={15} />
-        </button>
+        {!editing && (
+          <div className="flex items-center gap-2">
+            <button
+              onClick={startEdit}
+              className="btn border border-navy-200 bg-white px-4 py-2.5 text-sm font-semibold text-navy-700 hover:bg-navy-50"
+            >
+              <Pencil size={15} /> Edit
+            </button>
+            <button
+              onClick={remove}
+              className="btn border border-red-200 bg-red-50 px-3 py-2.5 text-sm font-semibold text-red-600 hover:bg-red-100"
+              aria-label="Delete entry"
+            >
+              <Trash2 size={15} />
+            </button>
+          </div>
+        )}
       </div>
 
+      {editing && draft ? (
+        <div className="mt-6 space-y-5 rounded-2xl border border-navy-100 bg-white p-6">
+          <h2 className="flex items-center gap-2 text-sm font-bold text-navy-900">
+            <Pencil size={16} className="text-teal-600" /> Edit entry
+          </h2>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <label className="block">
+              <span className="mb-1.5 block text-xs font-bold uppercase tracking-wide text-navy-400">Date</span>
+              <input type="date" className={inputCls} value={draft.date} onChange={(e) => setDraft({ ...draft, date: e.target.value })} />
+            </label>
+            <label className="block">
+              <span className="mb-1.5 block text-xs font-bold uppercase tracking-wide text-navy-400">Room</span>
+              <input className={inputCls} value={draft.room} onChange={(e) => setDraft({ ...draft, room: e.target.value })} />
+            </label>
+            <label className="block">
+              <span className="mb-1.5 block text-xs font-bold uppercase tracking-wide text-navy-400">Subject</span>
+              <input className={inputCls} value={draft.subject} onChange={(e) => setDraft({ ...draft, subject: e.target.value })} />
+            </label>
+            <label className="block">
+              <span className="mb-1.5 block text-xs font-bold uppercase tracking-wide text-navy-400">Class</span>
+              <input className={inputCls} value={draft.className} onChange={(e) => setDraft({ ...draft, className: e.target.value })} />
+            </label>
+          </div>
+          <EditTextArea label="What you recorded" value={draft.note} onChange={(v) => setDraft({ ...draft, note: v })} rows={4} />
+          <ListEditor label="Outcomes" items={draft.outcomes} onChange={(v) => setDraft({ ...draft, outcomes: v })} placeholder="outcome" />
+          <EditTextArea label="Program annotation" value={draft.evidence.annotations} onChange={(v) => setDraft({ ...draft, evidence: { ...draft.evidence, annotations: v } })} />
+          <EditTextArea label="Assessment evidence" value={draft.evidence.assessmentEvidence} onChange={(v) => setDraft({ ...draft, evidence: { ...draft.evidence, assessmentEvidence: v } })} />
+          <EditTextArea label="Differentiation" value={draft.evidence.differentiation} onChange={(v) => setDraft({ ...draft, evidence: { ...draft.evidence, differentiation: v } })} rows={2} />
+          <EditTextArea label="Reflection" value={draft.evidence.reflection} onChange={(v) => setDraft({ ...draft, evidence: { ...draft.evidence, reflection: v } })} />
+          <ListEditor label="Next lesson actions" items={draft.evidence.nextSteps} onChange={(v) => setDraft({ ...draft, evidence: { ...draft.evidence, nextSteps: v } })} placeholder="action" />
+          <div className="flex items-center justify-end gap-3 pt-1">
+            <button onClick={cancelEdit} disabled={saving} className="btn-ghost text-sm">
+              Cancel
+            </button>
+            <button onClick={saveEdit} disabled={saving} className="btn-primary text-sm">
+              {saving ? <Loader2 size={16} className="animate-spin" /> : <Check size={16} />} Save changes
+            </button>
+          </div>
+        </div>
+      ) : (
+        <>
       {/* the raw note */}
       <div className="mt-6 rounded-2xl border border-navy-100 bg-cloud/60 p-5">
         <p className="mb-1.5 flex items-center gap-1.5 text-xs font-bold uppercase tracking-wide text-navy-400">
@@ -228,6 +395,8 @@ export default function EntryDetail() {
         <p className="mt-6 rounded-2xl bg-cloud p-5 text-sm text-navy-500">
           No AI evidence was generated for this entry.
         </p>
+      )}
+        </>
       )}
     </main>
   )

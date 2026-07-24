@@ -9,6 +9,7 @@ import {
   orderBy,
   query,
   serverTimestamp,
+  updateDoc,
   type Timestamp,
 } from 'firebase/firestore'
 import { db } from './firebase'
@@ -81,6 +82,16 @@ export async function saveEntry(uid: string, entry: Omit<LessonEntry, 'id' | 'cr
     createdAt: serverTimestamp(),
   })
   return ref.id
+}
+
+/** Edit an existing diary entry (note, class details, outcomes and evidence). */
+export async function updateEntry(
+  uid: string,
+  id: string,
+  patch: Partial<Omit<LessonEntry, 'id' | 'createdAt'>>,
+) {
+  if (!db) throw { code: 'unavailable' }
+  await updateDoc(doc(db, 'users', uid, 'entries', id), { ...patch, updatedAt: serverTimestamp() })
 }
 
 export async function deleteEntry(uid: string, id: string) {
